@@ -1,0 +1,70 @@
+groups:
+  - name: digitaltwin-api
+    rules:
+      - alert: HighErrorRate
+        expr: >
+          sum(rate(http_requests_received_total{job="digitaltwin-api",code=~"5.."}[5m]))
+          / sum(rate(http_requests_received_total{job="digitaltwin-api"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API error rate above 5% for 5 minutes"
+          description: "Current error rate: {{ $value | humanizePercentage }}"
+
+      - alert: HighLatency
+        expr: >
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="digitaltwin-api"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency above 2 seconds"
+          description: "Current p95: {{ $value | humanizeDuration }}"
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes{job="digitaltwin-api"} > 400 * 1024 * 1024
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API memory usage above 400MB for 10 minutes"
+          description: "Current memory: {{ $value | humanize1024 }}B"
+
+  - name: digitaltwin-microservices
+    rules:
+      - alert: MicroserviceDown
+        expr: up{job=~"deepface-service|voice-service|llm-service|avatar-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been unreachable for over 1 minute"
+
+      - alert: MicroserviceHighLatency
+        expr: >
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=~"deepface-service|voice-service|llm-service|avatar-service"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.job }} p95 latency above 5 seconds"
+
+  - name: digitaltwin-infrastructure
+    rules:
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL database is down"
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis cache is down"

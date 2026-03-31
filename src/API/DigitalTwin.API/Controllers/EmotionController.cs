@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using DigitalTwin.API.Middleware;
 
 namespace DigitalTwin.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [RateLimit(20, "emotion")]
     public class EmotionController : ControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;

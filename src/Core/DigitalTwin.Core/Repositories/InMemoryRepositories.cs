@@ -161,7 +161,7 @@ namespace DigitalTwin.Core.Repositories
         public Task<AlertRule> GetByIdAsync(Guid id) => Task.FromResult(_rules.Find(r => r.Id == id));
         public Task<List<AlertRule>> GetAllAsync() => Task.FromResult(new List<AlertRule>(_rules));
         public Task<List<AlertRule>> GetByBuildingIdAsync(Guid buildingId) => Task.FromResult(_rules.FindAll(r => r.BuildingId == buildingId));
-        public Task<List<AlertRule>> GetBySensorIdAsync(Guid sensorId) => Task.FromResult(_rules.FindAll(r => r.SensorId == sensorId));
+        public Task<List<AlertRule>> GetBySensorIdAsync(Guid sensorId) => Task.FromResult(_rules.FindAll(r => r.Id == sensorId));
         public Task<AlertRule> AddAsync(AlertRule rule) { rule.Id = Guid.NewGuid(); rule.CreatedAt = DateTime.UtcNow; _rules.Add(rule); return Task.FromResult(rule); }
         public Task<AlertRule> UpdateAsync(AlertRule rule) { var i = _rules.FindIndex(r => r.Id == rule.Id); if (i >= 0) _rules[i] = rule; return Task.FromResult(rule); }
         public Task<bool> DeleteAsync(Guid id) => Task.FromResult(_rules.RemoveAll(r => r.Id == id) > 0);

@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DigitalTwin.Core.DTOs;
+using DigitalTwin.API.Middleware;
 
 namespace DigitalTwin.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [RateLimit(15, "voice")]
     public class VoiceController : ControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;

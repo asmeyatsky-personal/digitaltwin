@@ -104,6 +104,9 @@ namespace DigitalTwin.Infrastructure.Filters
         private readonly int _requestsPerMinute;
         private readonly string _identifier;
 
+        public int RequestsPerMinute => _requestsPerMinute;
+        public string Identifier => _identifier;
+
         public RateLimitAttribute(int requestsPerMinute = 100, string identifier = "default")
         {
             _requestsPerMinute = requestsPerMinute;

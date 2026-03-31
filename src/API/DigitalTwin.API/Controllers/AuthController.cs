@@ -3,19 +3,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using DigitalTwin.API.Services;
+using DigitalTwin.API.Middleware;
 using System.ComponentModel.DataAnnotations;
 
 namespace DigitalTwin.API.Controllers
 {
     /// <summary>
     /// Authentication Controller for JWT token management
-    /// 
+    ///
     /// Architectural Intent:
     /// - Handles user authentication and authorization
     /// - Manages JWT token generation and validation
     /// - Supports user registration and login
     /// - Provides token refresh functionality
-    /// 
+    ///
     /// Key Features:
     /// 1. User registration with validation
     /// 2. User login with JWT token response
@@ -25,6 +26,7 @@ namespace DigitalTwin.API.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [RateLimit(5, "auth")]
     public class AuthController : ControllerBase
     {
         private readonly JwtAuthenticationService _jwtService;

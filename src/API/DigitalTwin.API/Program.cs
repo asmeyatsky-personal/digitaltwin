@@ -13,6 +13,10 @@ using DigitalTwin.API.Services;
 using System.Security.Cryptography;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Polly;
 
 namespace DigitalTwin.API
 {
@@ -22,7 +26,10 @@ namespace DigitalTwin.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add<DigitalTwin.API.Filters.ModelValidationFilter>();
+            });
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
@@ -171,35 +178,100 @@ namespace DigitalTwin.API
                 builder.Services.AddDistributedMemoryCache();
             }
 
-            // HttpClient with named clients and timeouts
+            // HttpClient with named clients, resilience pipelines (Polly), and timeouts
             builder.Services.AddHttpClient("DeepFace", client =>
             {
                 var baseUrl = Environment.GetEnvironmentVariable("Services__DeepFace__BaseUrl") ?? "http://localhost:8001";
                 client.BaseAddress = new Uri(baseUrl);
-                client.Timeout = TimeSpan.FromSeconds(30);
+                client.Timeout = Timeout.InfiniteTimeSpan; // Polly manages timeouts
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
+                options.Retry.MaxRetryAttempts = 3;
+                options.Retry.Delay = TimeSpan.FromMilliseconds(500);
+                options.Retry.BackoffType = DelayBackoffType.Exponential;
+                options.Retry.UseJitter = true;
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+                options.CircuitBreaker.FailureRatio = 0.5;
+                options.CircuitBreaker.MinimumThroughput = 5;
+                options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
             });
             builder.Services.AddHttpClient("LLM", client =>
             {
                 var baseUrl = Environment.GetEnvironmentVariable("Services__LLM__BaseUrl") ?? "http://localhost:8004";
                 client.BaseAddress = new Uri(baseUrl);
-                client.Timeout = TimeSpan.FromSeconds(30);
+                client.Timeout = Timeout.InfiniteTimeSpan;
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(45);
+                options.Retry.MaxRetryAttempts = 3;
+                options.Retry.Delay = TimeSpan.FromMilliseconds(500);
+                options.Retry.BackoffType = DelayBackoffType.Exponential;
+                options.Retry.UseJitter = true;
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+                options.CircuitBreaker.FailureRatio = 0.5;
+                options.CircuitBreaker.MinimumThroughput = 5;
+                options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(15);
             });
             builder.Services.AddHttpClient("Avatar", client =>
             {
                 var baseUrl = Environment.GetEnvironmentVariable("Services__Avatar__BaseUrl") ?? "http://localhost:8002";
                 client.BaseAddress = new Uri(baseUrl);
-                client.Timeout = TimeSpan.FromSeconds(60);
+                client.Timeout = Timeout.InfiniteTimeSpan;
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
+                options.Retry.MaxRetryAttempts = 3;
+                options.Retry.Delay = TimeSpan.FromSeconds(1);
+                options.Retry.BackoffType = DelayBackoffType.Exponential;
+                options.Retry.UseJitter = true;
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+                options.CircuitBreaker.FailureRatio = 0.5;
+                options.CircuitBreaker.MinimumThroughput = 5;
+                options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(30);
             });
             builder.Services.AddHttpClient("Voice", client =>
             {
                 var baseUrl = Environment.GetEnvironmentVariable("Services__Voice__BaseUrl") ?? "http://localhost:8003";
                 client.BaseAddress = new Uri(baseUrl);
-                client.Timeout = TimeSpan.FromSeconds(60);
+                client.Timeout = Timeout.InfiniteTimeSpan;
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
+                options.Retry.MaxRetryAttempts = 3;
+                options.Retry.Delay = TimeSpan.FromMilliseconds(500);
+                options.Retry.BackoffType = DelayBackoffType.Exponential;
+                options.Retry.UseJitter = true;
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+                options.CircuitBreaker.FailureRatio = 0.5;
+                options.CircuitBreaker.MinimumThroughput = 5;
+                options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(20);
             });
             builder.Services.AddHttpClient("ExpoPush", client =>
             {
                 client.BaseAddress = new Uri("https://exp.host/--/api/v2/push/");
-                client.Timeout = TimeSpan.FromSeconds(30);
+                client.Timeout = Timeout.InfiniteTimeSpan;
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
+                options.Retry.MaxRetryAttempts = 2;
+                options.Retry.Delay = TimeSpan.FromSeconds(1);
+                options.Retry.BackoffType = DelayBackoffType.Exponential;
+                options.Retry.UseJitter = true;
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(30);
+                options.CircuitBreaker.FailureRatio = 0.5;
+                options.CircuitBreaker.MinimumThroughput = 5;
+                options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(60);
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
             });
             builder.Services.AddHttpClient();
 
@@ -256,6 +328,16 @@ namespace DigitalTwin.API
             builder.Services.AddScoped<ICreativeService, CreativeService>();
             builder.Services.AddScoped<ITherapyService, TherapyService>();
             builder.Services.AddScoped<ILearningService, LearningService>();
+
+            // Rate limiting — Redis-backed in production, in-memory fallback
+            if (!string.IsNullOrEmpty(redisConnection))
+            {
+                builder.Services.AddSingleton<IRateLimitService, RedisRateLimitService>();
+            }
+            else
+            {
+                builder.Services.AddSingleton<IRateLimitService, InMemoryRateLimitService>();
+            }
 
             // Event bus — RabbitMQ in production, in-memory fallback for dev
             var rabbitMqConnection = Environment.GetEnvironmentVariable("RabbitMQ__ConnectionString");
@@ -316,15 +398,55 @@ namespace DigitalTwin.API
                 options.JsonWriterOptions = new System.Text.Json.JsonWriterOptions { Indented = false };
             });
 
+            // Aggregated health checks — checks all dependencies
+            builder.Services.AddHealthChecks()
+                .AddNpgSql(connectionString, name: "postgres", tags: new[] { "db" })
+                .AddUrlGroup(new Uri(
+                    (Environment.GetEnvironmentVariable("Services__DeepFace__BaseUrl") ?? "http://localhost:8001") + "/health"),
+                    name: "deepface", tags: new[] { "microservice" })
+                .AddUrlGroup(new Uri(
+                    (Environment.GetEnvironmentVariable("Services__LLM__BaseUrl") ?? "http://localhost:8004") + "/health"),
+                    name: "llm", tags: new[] { "microservice" })
+                .AddUrlGroup(new Uri(
+                    (Environment.GetEnvironmentVariable("Services__Avatar__BaseUrl") ?? "http://localhost:8002") + "/health"),
+                    name: "avatar", tags: new[] { "microservice" })
+                .AddUrlGroup(new Uri(
+                    (Environment.GetEnvironmentVariable("Services__Voice__BaseUrl") ?? "http://localhost:8003") + "/health"),
+                    name: "voice", tags: new[] { "microservice" });
+
+            if (!string.IsNullOrEmpty(redisConnection))
+            {
+                builder.Services.AddHealthChecks()
+                    .AddRedis(redisConnection, name: "redis", tags: new[] { "cache" });
+            }
+
+            // Graceful shutdown configuration
+            builder.Host.ConfigureHostOptions(options =>
+            {
+                options.ShutdownTimeout = TimeSpan.FromSeconds(30);
+            });
+
             var app = builder.Build();
 
+            // Global exception handling — must be first in pipeline
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+            // Swagger — available in all environments
+            app.UseSwagger();
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
                 app.UseSwaggerUI(c =>
                 {
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Digital Twin Emotional Companion API v1");
                     c.RoutePrefix = string.Empty;
+                });
+            }
+            else
+            {
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Digital Twin Emotional Companion API v1");
+                    c.RoutePrefix = "api-docs";
                 });
             }
 
@@ -332,6 +454,7 @@ namespace DigitalTwin.API
             app.UseCors("Default");
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseMiddleware<DigitalTwin.API.Middleware.RateLimitingMiddleware>();
             app.UseUsageLimitMiddleware();
 
             app.UseHttpMetrics();
@@ -340,13 +463,33 @@ namespace DigitalTwin.API
             app.MapMetrics();
             app.MapHub<CompanionHub>("/hubs/companion");
 
-            app.MapGet("/health", () => new
+            // Aggregated health check — readiness probe (checks all dependencies)
+            app.MapHealthChecks("/health", new HealthCheckOptions
             {
-                status = "healthy",
-                timestamp = DateTime.UtcNow,
-                service = "Digital Twin Emotional Companion API",
-                version = "1.0.0"
+                ResponseWriter = async (context, report) =>
+                {
+                    context.Response.ContentType = "application/json";
+                    var result = new
+                    {
+                        status = report.Status.ToString().ToLower(),
+                        timestamp = DateTime.UtcNow,
+                        service = "Digital Twin Emotional Companion API",
+                        version = "1.0.0",
+                        totalDuration = report.TotalDuration.TotalMilliseconds,
+                        checks = report.Entries.Select(e => new
+                        {
+                            name = e.Key,
+                            status = e.Value.Status.ToString().ToLower(),
+                            duration = e.Value.Duration.TotalMilliseconds,
+                            error = e.Value.Exception?.Message
+                        })
+                    };
+                    await context.Response.WriteAsJsonAsync(result);
+                }
             });
+
+            // Lightweight liveness probe — no dependency checks (for K8s livenessProbe)
+            app.MapGet("/health/live", () => Results.Ok(new { status = "alive", timestamp = DateTime.UtcNow }));
 
             app.MapGet("/", () => new
             {

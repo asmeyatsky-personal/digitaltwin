@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DigitalTwin.Core.DTOs;
 using DigitalTwin.Core.Interfaces;
+using DigitalTwin.API.Middleware;
 using System.ComponentModel.DataAnnotations;
 
 namespace DigitalTwin.API.Controllers
@@ -17,6 +18,7 @@ namespace DigitalTwin.API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [RateLimit(30, "conversation")]
     public class ConversationController : ControllerBase
     {
         private readonly IConversationService _conversationService;
