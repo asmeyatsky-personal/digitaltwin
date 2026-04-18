@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package digitaltwin.moderation.v1;
+
+// Skeleton contract for the moderation bounded context. Concrete RPCs land
+// during the legacy .NET port; this file exists so the context's Rust
+// contracts crate has something to compile.
+
+service ModerationService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+message HealthRequest {}
+message HealthResponse {
+  string status = 1;
+}

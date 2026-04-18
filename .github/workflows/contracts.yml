@@ -1,0 +1,23 @@
+name: contracts
+
+on:
+  pull_request:
+    paths: ['contracts/**', '.github/workflows/contracts.yml']
+  push:
+    branches: [main]
+
+jobs:
+  buf:
+    name: buf lint + breaking
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: bufbuild/buf-setup-action@v1
+      - run: buf lint
+        working-directory: contracts
+      - name: Breaking check (against main)
+        run: buf breaking --against "https://github.com/${{ github.repository }}.git#branch=main,subdir=contracts"
+        working-directory: contracts
+        if: github.ref != 'refs/heads/main'

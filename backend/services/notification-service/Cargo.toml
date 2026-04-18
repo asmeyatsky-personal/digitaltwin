@@ -1,0 +1,24 @@
+[package]
+name = "notification-service"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "notification-service"
+path = "src/main.rs"
+
+[dependencies]
+kernel = { workspace = true }
+audit = { workspace = true }
+telemetry = { workspace = true }
+notification-application = { workspace = true }
+notification-contracts = { workspace = true }
+notification-domain = { workspace = true }
+notification-infrastructure = { workspace = true }
+notification-presentation = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }

@@ -1,0 +1,36 @@
+[package]
+name = "identity-service"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "identity-service"
+path = "src/main.rs"
+
+# Layer: service binary (composition root). This is the ONLY place where
+# infrastructure and presentation are wired together.
+[dependencies]
+kernel = { workspace = true }
+audit = { workspace = true }
+telemetry = { workspace = true }
+identity-application = { workspace = true }
+identity-contracts = { workspace = true }
+identity-domain = { workspace = true }
+identity-infrastructure = { workspace = true }
+identity-presentation = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+http = { workspace = true }
+tonic = { workspace = true }
+sqlx = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+figment = { workspace = true }

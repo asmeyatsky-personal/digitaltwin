@@ -1,0 +1,24 @@
+[package]
+name = "conversation-service"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "conversation-service"
+path = "src/main.rs"
+
+[dependencies]
+kernel = { workspace = true }
+audit = { workspace = true }
+telemetry = { workspace = true }
+conversation-application = { workspace = true }
+conversation-contracts = { workspace = true }
+conversation-domain = { workspace = true }
+conversation-infrastructure = { workspace = true }
+conversation-presentation = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }

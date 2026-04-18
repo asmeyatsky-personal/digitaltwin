@@ -1,0 +1,7 @@
+# Clippy config for the workspace.
+#
+# We'd like to enforce "no unwrap in production code" via disallowed-methods,
+# but the `serde_json::json!` macro and tests use unwrap internally, so the
+# rule is too noisy to be useful at the workspace level. Domain crates pin it
+# down via their own `#![deny(clippy::unwrap_used)]` attribute.
+avoid-breaking-exported-api = false

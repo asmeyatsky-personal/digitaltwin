@@ -1,0 +1,19 @@
+[package]
+name = "identity-application"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# Layer: application. Allowed deps: domain + kernel + audit port + async
+# primitives. No HTTP framework, no DB driver, no crypto library.
+[dependencies]
+kernel = { workspace = true }
+identity-domain = { workspace = true }
+audit = { workspace = true }
+async-trait = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }

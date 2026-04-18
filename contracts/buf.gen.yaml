@@ -1,0 +1,18 @@
+version: v2
+plugins:
+  # Rust (prost + tonic) is generated from backend/crates/*/build.rs directly;
+  # this file drives TypeScript generation for web/ and mobile/.
+  - remote: buf.build/community/stephenh-ts-proto
+    out: ../web/lib/contracts
+    opt:
+      - esModuleInterop=true
+      - outputServices=false
+      - useOptionals=messages
+      - stringEnums=true
+  - remote: buf.build/community/stephenh-ts-proto
+    out: ../mobile/lib/contracts
+    opt:
+      - esModuleInterop=true
+      - outputServices=false
+      - useOptionals=messages
+      - stringEnums=true

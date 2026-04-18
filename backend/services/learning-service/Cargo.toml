@@ -1,0 +1,24 @@
+[package]
+name = "learning-service"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "learning-service"
+path = "src/main.rs"
+
+[dependencies]
+kernel = { workspace = true }
+audit = { workspace = true }
+telemetry = { workspace = true }
+learning-application = { workspace = true }
+learning-contracts = { workspace = true }
+learning-domain = { workspace = true }
+learning-infrastructure = { workspace = true }
+learning-presentation = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }

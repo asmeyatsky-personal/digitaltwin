@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package digitaltwin.family.v1;
+
+// Skeleton contract for the family bounded context. Concrete RPCs land
+// during the legacy .NET port; this file exists so the context's Rust
+// contracts crate has something to compile.
+
+service FamilyService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+message HealthRequest {}
+message HealthResponse {
+  string status = 1;
+}

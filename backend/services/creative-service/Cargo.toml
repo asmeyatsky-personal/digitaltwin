@@ -1,0 +1,24 @@
+[package]
+name = "creative-service"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "creative-service"
+path = "src/main.rs"
+
+[dependencies]
+kernel = { workspace = true }
+audit = { workspace = true }
+telemetry = { workspace = true }
+creative-application = { workspace = true }
+creative-contracts = { workspace = true }
+creative-domain = { workspace = true }
+creative-infrastructure = { workspace = true }
+creative-presentation = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }

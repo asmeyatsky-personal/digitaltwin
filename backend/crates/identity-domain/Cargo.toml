@@ -1,0 +1,20 @@
+[package]
+name = "identity-domain"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# Layer: domain. Allowed deps: kernel + pure-value-object helpers. No async,
+# no runtime, no framework, no SDK — enforced by the short dep list here and
+# by cargo-deny `bans`.
+[dependencies]
+kernel = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+chrono = { workspace = true }
+# async-trait is a compile-time macro; it expands to plain trait methods and
+# pulls in no runtime. Acceptable inside domain per §2 (no SDK / framework /
+# adapter) — it's pure desugaring.
+async-trait = { workspace = true }

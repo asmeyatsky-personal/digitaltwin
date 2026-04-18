@@ -1,0 +1,294 @@
+[workspace]
+resolver = "2"
+members = [
+    # Shared
+    "crates/kernel",
+    "crates/audit",
+    "crates/telemetry",
+
+    # Identity (pilot — full implementation)
+    "crates/identity-contracts",
+    "crates/identity-domain",
+    "crates/identity-application",
+    "crates/identity-infrastructure",
+    "crates/identity-presentation",
+    "services/identity-service",
+
+    # Conversation
+    "crates/conversation-contracts",
+    "crates/conversation-domain",
+    "crates/conversation-application",
+    "crates/conversation-infrastructure",
+    "crates/conversation-presentation",
+    "services/conversation-service",
+
+    # Emotion (multi-modal fusion)
+    "crates/emotion-contracts",
+    "crates/emotion-domain",
+    "crates/emotion-application",
+    "crates/emotion-infrastructure",
+    "crates/emotion-presentation",
+    "services/emotion-service",
+
+    # Avatar
+    "crates/avatar-contracts",
+    "crates/avatar-domain",
+    "crates/avatar-application",
+    "crates/avatar-infrastructure",
+    "crates/avatar-presentation",
+    "services/avatar-service",
+
+    # Voice
+    "crates/voice-contracts",
+    "crates/voice-domain",
+    "crates/voice-application",
+    "crates/voice-infrastructure",
+    "crates/voice-presentation",
+    "services/voice-service",
+
+    # Memory (personal history, journal, life events)
+    "crates/memory-contracts",
+    "crates/memory-domain",
+    "crates/memory-application",
+    "crates/memory-infrastructure",
+    "crates/memory-presentation",
+    "services/memory-service",
+
+    # Family
+    "crates/family-contracts",
+    "crates/family-domain",
+    "crates/family-application",
+    "crates/family-infrastructure",
+    "crates/family-presentation",
+    "services/family-service",
+
+    # Achievement
+    "crates/achievement-contracts",
+    "crates/achievement-domain",
+    "crates/achievement-application",
+    "crates/achievement-infrastructure",
+    "crates/achievement-presentation",
+    "services/achievement-service",
+
+    # Community
+    "crates/community-contracts",
+    "crates/community-domain",
+    "crates/community-application",
+    "crates/community-infrastructure",
+    "crates/community-presentation",
+    "services/community-service",
+
+    # Moderation
+    "crates/moderation-contracts",
+    "crates/moderation-domain",
+    "crates/moderation-application",
+    "crates/moderation-infrastructure",
+    "crates/moderation-presentation",
+    "services/moderation-service",
+
+    # Therapy
+    "crates/therapy-contracts",
+    "crates/therapy-domain",
+    "crates/therapy-application",
+    "crates/therapy-infrastructure",
+    "crates/therapy-presentation",
+    "services/therapy-service",
+
+    # Learning
+    "crates/learning-contracts",
+    "crates/learning-domain",
+    "crates/learning-application",
+    "crates/learning-infrastructure",
+    "crates/learning-presentation",
+    "services/learning-service",
+
+    # Creative
+    "crates/creative-contracts",
+    "crates/creative-domain",
+    "crates/creative-application",
+    "crates/creative-infrastructure",
+    "crates/creative-presentation",
+    "services/creative-service",
+
+    # Notification
+    "crates/notification-contracts",
+    "crates/notification-domain",
+    "crates/notification-application",
+    "crates/notification-infrastructure",
+    "crates/notification-presentation",
+    "services/notification-service",
+]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.93"
+license = "Proprietary"
+publish = false
+
+[workspace.dependencies]
+# Shared internal crates
+kernel = { path = "crates/kernel" }
+audit = { path = "crates/audit" }
+telemetry = { path = "crates/telemetry" }
+
+# Identity
+identity-contracts = { path = "crates/identity-contracts" }
+identity-domain = { path = "crates/identity-domain" }
+identity-application = { path = "crates/identity-application" }
+identity-infrastructure = { path = "crates/identity-infrastructure" }
+identity-presentation = { path = "crates/identity-presentation" }
+
+# Conversation
+conversation-contracts = { path = "crates/conversation-contracts" }
+conversation-domain = { path = "crates/conversation-domain" }
+conversation-application = { path = "crates/conversation-application" }
+conversation-infrastructure = { path = "crates/conversation-infrastructure" }
+conversation-presentation = { path = "crates/conversation-presentation" }
+
+# Emotion
+emotion-contracts = { path = "crates/emotion-contracts" }
+emotion-domain = { path = "crates/emotion-domain" }
+emotion-application = { path = "crates/emotion-application" }
+emotion-infrastructure = { path = "crates/emotion-infrastructure" }
+emotion-presentation = { path = "crates/emotion-presentation" }
+
+# Avatar
+avatar-contracts = { path = "crates/avatar-contracts" }
+avatar-domain = { path = "crates/avatar-domain" }
+avatar-application = { path = "crates/avatar-application" }
+avatar-infrastructure = { path = "crates/avatar-infrastructure" }
+avatar-presentation = { path = "crates/avatar-presentation" }
+
+# Voice
+voice-contracts = { path = "crates/voice-contracts" }
+voice-domain = { path = "crates/voice-domain" }
+voice-application = { path = "crates/voice-application" }
+voice-infrastructure = { path = "crates/voice-infrastructure" }
+voice-presentation = { path = "crates/voice-presentation" }
+
+# Memory
+memory-contracts = { path = "crates/memory-contracts" }
+memory-domain = { path = "crates/memory-domain" }
+memory-application = { path = "crates/memory-application" }
+memory-infrastructure = { path = "crates/memory-infrastructure" }
+memory-presentation = { path = "crates/memory-presentation" }
+
+# Family
+family-contracts = { path = "crates/family-contracts" }
+family-domain = { path = "crates/family-domain" }
+family-application = { path = "crates/family-application" }
+family-infrastructure = { path = "crates/family-infrastructure" }
+family-presentation = { path = "crates/family-presentation" }
+
+# Achievement
+achievement-contracts = { path = "crates/achievement-contracts" }
+achievement-domain = { path = "crates/achievement-domain" }
+achievement-application = { path = "crates/achievement-application" }
+achievement-infrastructure = { path = "crates/achievement-infrastructure" }
+achievement-presentation = { path = "crates/achievement-presentation" }
+
+# Community
+community-contracts = { path = "crates/community-contracts" }
+community-domain = { path = "crates/community-domain" }
+community-application = { path = "crates/community-application" }
+community-infrastructure = { path = "crates/community-infrastructure" }
+community-presentation = { path = "crates/community-presentation" }
+
+# Moderation
+moderation-contracts = { path = "crates/moderation-contracts" }
+moderation-domain = { path = "crates/moderation-domain" }
+moderation-application = { path = "crates/moderation-application" }
+moderation-infrastructure = { path = "crates/moderation-infrastructure" }
+moderation-presentation = { path = "crates/moderation-presentation" }
+
+# Therapy
+therapy-contracts = { path = "crates/therapy-contracts" }
+therapy-domain = { path = "crates/therapy-domain" }
+therapy-application = { path = "crates/therapy-application" }
+therapy-infrastructure = { path = "crates/therapy-infrastructure" }
+therapy-presentation = { path = "crates/therapy-presentation" }
+
+# Learning
+learning-contracts = { path = "crates/learning-contracts" }
+learning-domain = { path = "crates/learning-domain" }
+learning-application = { path = "crates/learning-application" }
+learning-infrastructure = { path = "crates/learning-infrastructure" }
+learning-presentation = { path = "crates/learning-presentation" }
+
+# Creative
+creative-contracts = { path = "crates/creative-contracts" }
+creative-domain = { path = "crates/creative-domain" }
+creative-application = { path = "crates/creative-application" }
+creative-infrastructure = { path = "crates/creative-infrastructure" }
+creative-presentation = { path = "crates/creative-presentation" }
+
+# Notification
+notification-contracts = { path = "crates/notification-contracts" }
+notification-domain = { path = "crates/notification-domain" }
+notification-application = { path = "crates/notification-application" }
+notification-infrastructure = { path = "crates/notification-infrastructure" }
+notification-presentation = { path = "crates/notification-presentation" }
+
+# Async runtime
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time", "net"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# Errors
+thiserror = "2"
+anyhow = "1"
+
+# Serialization / contracts
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+prost = "0.13"
+tonic = "0.12"
+
+# HTTP
+axum = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "timeout", "limit", "cors"] }
+http = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+
+# Postgres
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "chrono", "macros"] }
+
+# Crypto / auth
+argon2 = "0.5"
+jsonwebtoken = "9"
+rand = "0.9"
+sha2 = "0.10"
+
+# Identifiers / time
+uuid = { version = "1", features = ["v7", "serde"] }
+chrono = { version = "0.4", default-features = false, features = ["std", "serde", "clock"] }
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-opentelemetry = "0.28"
+opentelemetry = "0.27"
+opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
+metrics = "0.24"
+metrics-exporter-prometheus = "0.16"
+
+# Config / secrets
+figment = { version = "0.10", features = ["env", "toml"] }
+
+# Testing
+proptest = "1"
+tokio-test = "0.4"
+wiremock = "0.6"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"
+opt-level = 3
+
+[profile.dev]
+opt-level = 0
+debug = true

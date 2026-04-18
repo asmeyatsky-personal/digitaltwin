@@ -1,0 +1,75 @@
+# Cloud Run service manifest for identity-service.
+# Apply via: gcloud run services replace deploy/cloud-run/identity-service.yaml --region=${REGION}
+#
+# Secrets are Secret Manager references; Workload Identity binds them at
+# runtime (§4 "Secret Manager + Workload Identity only").
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: identity-service
+  annotations:
+    run.googleapis.com/ingress: internal-and-cloud-load-balancing
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "20"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/startup-cpu-boost: "true"
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      serviceAccountName: identity-service-sa@PROJECT_ID.iam.gserviceaccount.com
+      timeoutSeconds: 30
+      containerConcurrency: 80
+      containers:
+        - image: REGION-docker.pkg.dev/PROJECT_ID/digitaltwin/identity-service:COMMIT_SHA
+          ports:
+            - name: http1
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: "1"
+              memory: "512Mi"
+          env:
+            - name: IDENTITY_JWT_ISSUER
+              value: "https://auth.digitaltwin.example.com"
+            - name: IDENTITY_JWT_AUDIENCE
+              value: "digitaltwin-clients"
+            - name: IDENTITY_ACCESS_TTL_SECONDS
+              value: "900"
+            - name: IDENTITY_REFRESH_TTL_SECONDS
+              value: "2592000"
+            - name: IDENTITY_LOG_LEVEL
+              value: "info"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.internal:4317"
+            - name: IDENTITY_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: identity-database-url
+                  key: latest
+            - name: IDENTITY_JWT_PRIVATE_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: identity-jwt-private-key
+                  key: latest
+            - name: IDENTITY_JWT_PUBLIC_KEY_PEM
+              valueFrom:
+                secretKeyRef:
+                  name: identity-jwt-public-key
+                  key: latest
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 30
+            failureThreshold: 3

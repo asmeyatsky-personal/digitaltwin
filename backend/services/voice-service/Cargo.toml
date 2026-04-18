@@ -1,0 +1,24 @@
+[package]
+name = "voice-service"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "voice-service"
+path = "src/main.rs"
+
+[dependencies]
+kernel = { workspace = true }
+audit = { workspace = true }
+telemetry = { workspace = true }
+voice-application = { workspace = true }
+voice-contracts = { workspace = true }
+voice-domain = { workspace = true }
+voice-infrastructure = { workspace = true }
+voice-presentation = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }
