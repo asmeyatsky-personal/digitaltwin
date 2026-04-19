@@ -4,8 +4,8 @@
 
 use std::sync::Arc;
 
-use audit::{Actor, AuditError, AuditEvent, AuditPort};
 use async_trait::async_trait;
+use audit::{Actor, AuditError, AuditEvent, AuditPort};
 use conversation_application::{
     EndConversation, EndConversationInput, GetHistory, GetHistoryInput, ListConversations,
     ListConversationsInput, SendMessage, SendMessageError, SendMessageInput, StartConversation,

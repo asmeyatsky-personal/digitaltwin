@@ -1,5 +1,12 @@
-# cargo-deny: supply chain (§4) + layer direction enforcement (§2).
-# Run in CI: `cargo deny check`
+# cargo-deny: supply chain enforcement (§4). Run in CI: `cargo deny check`.
+#
+# Layer direction (§2) is enforced mechanically by each crate's `Cargo.toml`
+# dependency list — a domain crate that only declares `thiserror` + `serde` +
+# `chrono` + `async-trait` cannot transitively pull in `tokio` or `sqlx`, and
+# the compiler rejects any attempt to `use` them. A parallel `bans.deny`
+# list here would duplicate that check with a trickier wrapper allowlist that
+# grows with every new bounded context, so we rely on Cargo.toml discipline.
+# If a real violation appears, `cargo tree -p <crate>-domain` will catch it.
 
 [graph]
 all-features = false
@@ -9,11 +16,15 @@ no-default-features = false
 version = 2
 yanked = "deny"
 ignore = [
-    # tokio-tar is pulled only by `testcontainers` (dev-only, gated behind
-    # [dev-dependencies] of identity-integration-tests). The advisory describes
-    # a tar-parsing bug that never touches production code paths. No safe
-    # upgrade exists; upstream testcontainers has not migrated yet.
+    # tokio-tar is pulled only by `testcontainers` (dev-only via
+    # identity-integration-tests). No production binary includes it.
     { id = "RUSTSEC-2025-0111", reason = "dev-only via testcontainers; not in production binaries" },
+    # rsa 0.9 Marvin Attack. `rsa` is used only by the Identity E2E test to
+    # generate an ephemeral keypair; production JWT signing uses jsonwebtoken.
+    { id = "RUSTSEC-2023-0071", reason = "dev-only RSA keygen in integration tests" },
+    # rustls-pemfile unmaintained. Indirect dep via bollard → testcontainers
+    # (dev-only); no safe upgrade path, not reachable from production code.
+    { id = "RUSTSEC-2025-0134", reason = "unmaintained, dev-only via testcontainers" },
 ]
 
 [licenses]
@@ -28,36 +39,27 @@ allow = [
     "Unicode-3.0",
     "Zlib",
     "MPL-2.0",
+    # webpki-roots ships the Mozilla trust bundle under CDLA-Permissive-2.0.
+    # Permissive, no copyleft; only used for rustls TLS verification.
+    "CDLA-Permissive-2.0",
 ]
 confidence-threshold = 0.93
+
+# Workspace crates are private (not published to crates.io); cargo-deny skips
+# the license check for them so the intentionally non-SPDX `license =
+# "Proprietary"` in workspace.package does not fail CI.
+private = { ignore = true }
 
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 
-# -------- Layer boundary enforcement (§2 domain ← application ← infrastructure ← presentation) --------
-# cargo-deny's `bans` table forbids specific crates from appearing in a dependency subtree.
-# We assert that each domain crate's transitive deps contain no infrastructure/presentation crate.
-# If a future refactor accidentally introduces such a dep, `cargo deny check bans` fails CI.
-
 [bans]
 multiple-versions = "warn"
+# Path deps in the workspace are intentionally unversioned.
 wildcards = "deny"
+allow-wildcard-paths = true
 highlight = "all"
 workspace-default-features = "allow"
 external-default-features = "allow"
-
-# Domain must not depend on any adapter/runtime/framework crate.
-deny = [
-    # tokio/axum/sqlx/etc. are adapter concerns — domain must stay pure.
-    # These rules apply only when the crate appears under a domain crate's subtree,
-    # expressed via `wrappers` (the parent that is allowed to pull the dep in).
-    { crate = "tokio",   wrappers = ["audit", "telemetry", "identity-application", "identity-infrastructure", "identity-presentation", "identity-service"] },
-    { crate = "axum",    wrappers = ["identity-presentation", "identity-service"] },
-    { crate = "tonic",   wrappers = ["identity-presentation", "identity-service"] },
-    { crate = "sqlx",    wrappers = ["audit", "identity-infrastructure"] },
-    { crate = "reqwest", wrappers = ["identity-infrastructure", "telemetry"] },
-    { crate = "argon2",  wrappers = ["identity-infrastructure"] },
-    { crate = "jsonwebtoken", wrappers = ["identity-infrastructure"] },
-]

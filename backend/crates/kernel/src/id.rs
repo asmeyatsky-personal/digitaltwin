@@ -142,4 +142,3 @@ mod tests {
         assert!(set.contains(&a));
     }
 }
-

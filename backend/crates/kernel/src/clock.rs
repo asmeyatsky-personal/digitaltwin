@@ -27,4 +27,3 @@ mod tests {
         assert!(b > a);
     }
 }
-
