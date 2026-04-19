@@ -90,3 +90,56 @@ impl<T: ?Sized> FromStr for EntityId<T> {
             .map_err(|e| IdError::Invalid(e.to_string()))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct Marker;
+
+    #[test]
+    fn new_produces_unique_ids() {
+        let a = EntityId::<Marker>::new();
+        let b = EntityId::<Marker>::new();
+        assert_ne!(a, b);
+    }
+
+    #[test]
+    fn round_trip_display_and_from_str() {
+        let id = EntityId::<Marker>::new();
+        let parsed = EntityId::<Marker>::from_str(&id.to_string()).expect("parses");
+        assert_eq!(id, parsed);
+        assert_eq!(id.as_uuid(), parsed.as_uuid());
+    }
+
+    #[test]
+    fn invalid_input_returns_idelrror() {
+        let e = EntityId::<Marker>::from_str("not-a-uuid").unwrap_err();
+        assert!(matches!(e, IdError::Invalid(_)));
+    }
+
+    #[test]
+    fn clone_and_debug_are_cheap() {
+        let a = EntityId::<Marker>::new();
+        let b = a;
+        assert_eq!(a, b);
+        let _ = format!("{a:?}");
+    }
+
+    #[test]
+    fn default_new_are_distinct() {
+        let a = EntityId::<Marker>::default();
+        let b = EntityId::<Marker>::default();
+        assert_ne!(a, b);
+    }
+
+    #[test]
+    fn hash_and_eq_align() {
+        use std::collections::HashSet;
+        let a = EntityId::<Marker>::new();
+        let mut set = HashSet::new();
+        set.insert(a);
+        assert!(set.contains(&a));
+    }
+}
+

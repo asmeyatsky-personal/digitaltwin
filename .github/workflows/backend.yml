@@ -51,17 +51,10 @@ jobs:
           command: check
           arguments: --all-features
 
-  audit:
-    name: cargo-audit
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: rustsec/audit-check@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+  # cargo-deny's `advisories` table already enforces the vulnerability floor
+  # and respects our ignore list (see backend/deny.toml). A separate
+  # rustsec/audit-check step duplicates the same check but cannot be configured
+  # to honour the ignore list, so it has been dropped.
 
   # §5 testing floor. Overall ≥80%; per-crate thresholds enforced by the
   # check-coverage.py script below.

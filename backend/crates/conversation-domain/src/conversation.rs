@@ -136,4 +136,23 @@ mod tests {
         let c = c.record_message_pair().expect("ok");
         assert_eq!(c.message_count(), 4);
     }
+
+    #[test]
+    fn getters_expose_start_state() {
+        let c = fixture();
+        assert_eq!(c.title(), Some("test"));
+        assert_eq!(c.message_count(), 0);
+        assert!(c.ended_at().is_none());
+        let _ = c.id();
+        let _ = c.user_id();
+        assert!(c.started_at() <= Utc::now());
+    }
+
+    #[test]
+    fn end_sets_ended_at() {
+        let c = fixture();
+        let now = Utc::now();
+        let ended = c.end(now);
+        assert_eq!(ended.ended_at(), Some(now));
+    }
 }

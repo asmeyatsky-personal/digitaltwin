@@ -57,3 +57,50 @@ impl std::fmt::Debug for PasswordHash {
         f.write_str("PasswordHash(<redacted>)")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn email_parse_accepts_canonical() {
+        let e = Email::parse("Alice@EXAMPLE.com").expect("valid");
+        assert_eq!(e.as_str(), "alice@example.com");
+    }
+
+    #[test]
+    fn email_parse_rejects_missing_at() {
+        assert_eq!(
+            Email::parse("no-at-sign").unwrap_err(),
+            DomainError::InvalidEmail
+        );
+    }
+
+    #[test]
+    fn email_parse_rejects_empty_local() {
+        assert_eq!(
+            Email::parse("@example.com").unwrap_err(),
+            DomainError::InvalidEmail
+        );
+    }
+
+    #[test]
+    fn email_parse_rejects_no_dot_in_domain() {
+        assert_eq!(Email::parse("a@b").unwrap_err(), DomainError::InvalidEmail);
+    }
+
+    #[test]
+    fn email_debug_redacts_address() {
+        let e = Email::parse("alice@example.com").expect("valid");
+        let rendered = format!("{e:?}");
+        assert!(rendered.contains("<redacted>"), "got: {rendered}");
+        assert!(!rendered.contains("alice"), "got: {rendered}");
+    }
+
+    #[test]
+    fn password_hash_debug_redacts() {
+        let h = PasswordHash::from_raw("argon2id$m=19456,t=2,p=1$...".into());
+        assert_eq!(format!("{h:?}"), "PasswordHash(<redacted>)");
+        assert!(h.as_str().starts_with("argon2id$"));
+    }
+}

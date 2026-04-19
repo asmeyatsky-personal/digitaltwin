@@ -12,3 +12,19 @@ impl Clock for SystemClock {
         Utc::now()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{thread, time::Duration};
+
+    #[test]
+    fn system_clock_advances() {
+        let c = SystemClock;
+        let a = c.now();
+        thread::sleep(Duration::from_millis(2));
+        let b = c.now();
+        assert!(b > a);
+    }
+}
+

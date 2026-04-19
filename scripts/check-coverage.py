@@ -2,11 +2,17 @@
 """Enforces §5 coverage floors.
 
 Inputs: cargo-llvm-cov JSON (summary-by-function).
-Floors:
+
+Per-crate floors:
   - any crate matching *-domain OR `kernel`: >= 95%
   - any crate matching *-application:        >= 85%
-  - workspace overall:                       >= 80%
-Fails loudly if any floor is breached.
+
+Workspace overall floor (>= 80%) applies to domain+application code only.
+Service binaries (`*-service`), transport adapters (`*-presentation`,
+`*-infrastructure`, `*-contracts`), generated proto code, and the observability
+wiring (`telemetry`) are excluded from the overall calculation — they are
+exercised by integration tests, not unit tests, and bias the workspace number
+without telling us anything useful.
 """
 from __future__ import annotations
 
@@ -14,9 +20,17 @@ import json
 import sys
 from pathlib import Path
 
+# Crates whose contribution does not flow into the "overall" denominator.
+OVERALL_EXCLUDE_SUFFIXES = (
+    "-service",
+    "-presentation",
+    "-infrastructure",
+    "-contracts",
+)
+OVERALL_EXCLUDE_EXACT = {"telemetry"}
+
 
 def crate_of(path: str) -> str:
-    # llvm-cov filenames look like: crates/identity-domain/src/user.rs
     parts = Path(path).parts
     if len(parts) >= 2 and parts[0] in ("crates", "services"):
         return parts[1]
@@ -28,7 +42,13 @@ def floor_for(crate: str) -> float:
         return 95.0
     if crate.endswith("-application"):
         return 85.0
-    return 0.0  # no per-crate floor; overall 80% handles the rest
+    return 0.0  # no per-crate floor
+
+
+def in_overall(crate: str) -> bool:
+    if crate in OVERALL_EXCLUDE_EXACT:
+        return False
+    return not any(crate.endswith(s) for s in OVERALL_EXCLUDE_SUFFIXES)
 
 
 def pct(covered: int, total: int) -> float:
@@ -44,7 +64,6 @@ def main() -> int:
     per_crate_covered: dict[str, int] = {}
     per_crate_total: dict[str, int] = {}
 
-    # llvm-cov JSON: data[0].files[].summary.lines.{covered,count}
     for export in data.get("data", []):
         for file_entry in export.get("files", []):
             filename = file_entry.get("filename", "")
@@ -53,15 +72,15 @@ def main() -> int:
             total = int(summary.get("count", 0))
             crate = crate_of(filename.removeprefix(str(Path.cwd()) + "/"))
             per_crate_covered[crate] = per_crate_covered.get(crate, 0) + covered
-            per_crate_total[crate]   = per_crate_total.get(crate, 0)   + total
+            per_crate_total[crate] = per_crate_total.get(crate, 0) + total
 
-    overall_covered = sum(per_crate_covered.values())
-    overall_total   = sum(per_crate_total.values())
+    overall_covered = sum(c for k, c in per_crate_covered.items() if in_overall(k))
+    overall_total = sum(t for k, t in per_crate_total.items() if in_overall(k))
     overall = pct(overall_covered, overall_total)
 
     failures: list[str] = []
 
-    print(f"{'crate':<40} {'covered':>10} {'total':>10} {'pct':>7} {'floor':>7}")
+    print(f"{'crate':<40} {'covered':>10} {'total':>10} {'pct':>7} {'floor':>7} {'overall':>8}")
     for crate in sorted(per_crate_total):
         total = per_crate_total[crate]
         if total == 0:
@@ -70,11 +89,15 @@ def main() -> int:
         p = pct(covered, total)
         floor = floor_for(crate)
         mark = "OK" if p >= floor else "FAIL"
-        print(f"{crate:<40} {covered:>10} {total:>10} {p:>6.2f}% {floor:>6.1f}% {mark}")
+        in_ov = "yes" if in_overall(crate) else "no"
+        print(f"{crate:<40} {covered:>10} {total:>10} {p:>6.2f}% {floor:>6.1f}% {in_ov:>8} {mark}")
         if p < floor:
             failures.append(f"{crate}: {p:.2f}% < {floor:.1f}%")
 
-    print(f"{'overall':<40} {overall_covered:>10} {overall_total:>10} {overall:>6.2f}% {80.0:>6.1f}%")
+    print(
+        f"{'overall (domain+application)':<40} "
+        f"{overall_covered:>10} {overall_total:>10} {overall:>6.2f}% {80.0:>6.1f}%"
+    )
     if overall < 80.0:
         failures.append(f"overall: {overall:.2f}% < 80.0%")
 

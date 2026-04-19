@@ -103,4 +103,37 @@ mod tests {
         );
         assert!(matches!(e, Err(DomainError::MessageTooLong { .. })));
     }
+
+    #[test]
+    fn getters_expose_constructor_arguments() {
+        let now = Utc::now();
+        let m = Message::new(
+            MessageId::new(),
+            Role::Assistant,
+            "hello".into(),
+            EmotionalTone::Happy,
+            now,
+        )
+        .expect("valid");
+        assert_eq!(m.role(), Role::Assistant);
+        assert_eq!(m.body(), "hello");
+        assert_eq!(m.tone(), EmotionalTone::Happy);
+        assert_eq!(m.sent_at(), now);
+        let _ = m.id();
+    }
+
+    #[test]
+    fn accepts_body_at_max_length() {
+        let body = "a".repeat(MAX_MESSAGE_CHARS);
+        assert!(
+            Message::new(
+                MessageId::new(),
+                Role::User,
+                body,
+                EmotionalTone::Neutral,
+                Utc::now()
+            )
+            .is_ok()
+        );
+    }
 }

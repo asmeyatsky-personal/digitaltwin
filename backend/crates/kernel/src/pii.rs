@@ -42,3 +42,41 @@ impl Serialize for PiiString {
         s.serialize_str("<redacted>")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn expose_returns_original_value() {
+        let p = PiiString::new("secret@example.com");
+        assert_eq!(p.expose(), "secret@example.com");
+    }
+
+    #[test]
+    fn into_inner_consumes_wrapper() {
+        let p = PiiString::new("secret");
+        assert_eq!(p.into_inner(), "secret");
+    }
+
+    #[test]
+    fn debug_and_display_redact() {
+        let p = PiiString::new("alice@example.com");
+        assert_eq!(format!("{p:?}"), "PiiString(<redacted>)");
+        assert_eq!(format!("{p}"), "<redacted>");
+    }
+
+    #[test]
+    fn clone_preserves_value() {
+        let p = PiiString::new("v");
+        assert_eq!(p.clone().expose(), "v");
+    }
+
+    #[test]
+    fn serde_emits_redacted_placeholder() {
+        let p = PiiString::new("hunter2");
+        let json = serde_json::to_string(&p).expect("serialize");
+        assert_eq!(json, "\"<redacted>\"");
+    }
+}
+
