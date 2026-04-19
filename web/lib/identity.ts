@@ -12,7 +12,7 @@ import {
   RegisterUserResponse,
   RevokeTokenRequest,
   RevokeTokenResponse,
-} from "./contracts/identity/v1/identity";
+} from "./contracts/digitaltwin/identity/v1/identity";
 
 const IDENTITY_URL =
   process.env.NEXT_PUBLIC_IDENTITY_URL ?? "http://localhost:8080";

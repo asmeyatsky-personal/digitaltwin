@@ -1,6 +1,6 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let proto_root = std::path::Path::new("../../../contracts");
-    let proto_file = proto_root.join("memory/v1/memory.proto");
+    let proto_file = proto_root.join("digitaltwin/memory/v1/memory.proto");
     println!("cargo:rerun-if-changed={}", proto_file.display());
     tonic_build::configure()
         .build_client(true)

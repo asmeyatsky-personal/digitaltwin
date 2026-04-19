@@ -144,7 +144,7 @@ def contracts_crate(ctx: str) -> None:
     write(crate / "build.rs", textwrap.dedent(f"""\
         fn main() -> Result<(), Box<dyn std::error::Error>> {{
             let proto_root = std::path::Path::new("../../../contracts");
-            let proto_file = proto_root.join("{ctx}/v1/{ctx}.proto");
+            let proto_file = proto_root.join("digitaltwin/{ctx}/v1/{ctx}.proto");
             println!("cargo:rerun-if-changed={{}}", proto_file.display());
             tonic_build::configure()
                 .build_client(true)
@@ -250,7 +250,7 @@ def service(ctx: str) -> None:
 
 
 def proto(ctx: str) -> None:
-    path = CONTRACTS / ctx / "v1" / f"{ctx}.proto"
+    path = CONTRACTS / "digitaltwin" / ctx / "v1" / f"{ctx}.proto"
     service_name = "".join(part.title() for part in ctx.split("_"))
     write(path, textwrap.dedent(f"""\
         syntax = "proto3";

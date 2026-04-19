@@ -1,6 +1,6 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let proto_root = std::path::Path::new("../../../contracts");
-    let proto_file = proto_root.join("identity/v1/identity.proto");
+    let proto_file = proto_root.join("digitaltwin/identity/v1/identity.proto");
 
     println!("cargo:rerun-if-changed={}", proto_file.display());
 

@@ -8,7 +8,13 @@ no-default-features = false
 [advisories]
 version = 2
 yanked = "deny"
-ignore = []
+ignore = [
+    # tokio-tar is pulled only by `testcontainers` (dev-only, gated behind
+    # [dev-dependencies] of identity-integration-tests). The advisory describes
+    # a tar-parsing bug that never touches production code paths. No safe
+    # upgrade exists; upstream testcontainers has not migrated yet.
+    { id = "RUSTSEC-2025-0111", reason = "dev-only via testcontainers; not in production binaries" },
+]
 
 [licenses]
 version = 2
