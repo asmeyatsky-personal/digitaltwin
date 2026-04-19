@@ -1,0 +1,29 @@
+[package]
+name = "identity-integration-tests"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# E2E tests only — no library surface.
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+kernel = { workspace = true }
+audit = { workspace = true }
+identity-domain = { workspace = true }
+identity-application = { workspace = true }
+identity-infrastructure = { workspace = true }
+tokio = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+testcontainers = { workspace = true }
+testcontainers-modules = { workspace = true }
+rsa = { workspace = true }

@@ -82,7 +82,9 @@ namespace DigitalTwin.API
             builder.Services.AddDbContext<DigitalTwinDbContext>(options =>
                 options.UseNpgsql(connectionString));
 
-            // JWT Authentication — RS256 asymmetric signing (AD-1 security fix)
+            // JWT validation only. Tokens are issued by the Rust identity-service
+            // (ADR-0001); this API holds the corresponding public key for RS256
+            // signature verification via JwtConfiguration__PublicKeyPath.
             var jwtIssuer = Environment.GetEnvironmentVariable("JwtConfiguration__Issuer")
                 ?? builder.Configuration["JwtConfiguration:Issuer"]
                 ?? "DigitalTwin";
@@ -90,22 +92,13 @@ namespace DigitalTwin.API
                 ?? builder.Configuration["JwtConfiguration:Audience"]
                 ?? "DigitalTwin";
 
-            // Load RSA key for RS256 — private key path for signing, public for validation
-            var rsaPrivateKeyPath = Environment.GetEnvironmentVariable("JwtConfiguration__PrivateKeyPath")
-                ?? builder.Configuration["JwtConfiguration:PrivateKeyPath"];
             var rsaPublicKeyPath = Environment.GetEnvironmentVariable("JwtConfiguration__PublicKeyPath")
                 ?? builder.Configuration["JwtConfiguration:PublicKeyPath"];
 
             SecurityKey jwtSigningKey;
             var rsa = RSA.Create();
 
-            if (!string.IsNullOrEmpty(rsaPrivateKeyPath) && File.Exists(rsaPrivateKeyPath))
-            {
-                var privateKeyPem = File.ReadAllText(rsaPrivateKeyPath);
-                rsa.ImportFromPem(privateKeyPem);
-                jwtSigningKey = new RsaSecurityKey(rsa);
-            }
-            else if (!string.IsNullOrEmpty(rsaPublicKeyPath) && File.Exists(rsaPublicKeyPath))
+            if (!string.IsNullOrEmpty(rsaPublicKeyPath) && File.Exists(rsaPublicKeyPath))
             {
                 var publicKeyPem = File.ReadAllText(rsaPublicKeyPath);
                 rsa.ImportFromPem(publicKeyPem);
@@ -113,20 +106,16 @@ namespace DigitalTwin.API
             }
             else if (builder.Environment.IsDevelopment())
             {
-                // Development fallback: generate ephemeral RSA key pair
+                // Dev fallback: ephemeral key pair. Production must set
+                // JwtConfiguration__PublicKeyPath to the Rust identity-service's
+                // public key (Secret Manager reference on Cloud Run).
                 jwtSigningKey = new RsaSecurityKey(rsa);
             }
             else
             {
                 throw new InvalidOperationException(
-                    "JwtConfiguration__PrivateKeyPath or JwtConfiguration__PublicKeyPath must be set in production");
+                    "JwtConfiguration__PublicKeyPath must be set in production");
             }
-
-            // Store RSA instance for token generation in JwtAuthenticationService
-            builder.Services.AddSingleton(new JwtSigningCredentials(
-                new SigningCredentials(jwtSigningKey, SecurityAlgorithms.RsaSha256),
-                jwtIssuer,
-                jwtAudience));
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -283,7 +272,7 @@ namespace DigitalTwin.API
             }
 
             // Core services
-            builder.Services.AddSingleton<API.Services.JwtAuthenticationService>();
+            // Token issuance moved to the Rust identity-service (ADR-0001).
             builder.Services.AddScoped<PasswordHasher>();
             builder.Services.AddScoped<AuthenticationService>();
             builder.Services.AddScoped<RoleBasedAccessControlService>();
@@ -295,7 +284,7 @@ namespace DigitalTwin.API
             builder.Services.AddScoped<IReportService, ReportService>();
             builder.Services.AddScoped<IExportService, ExportService>();
             builder.Services.AddScoped<IWebhookService, WebhookService>();
-            builder.Services.AddScoped<IConversationService, ConversationService>();
+            // Conversation moved to the Rust conversation-service (ADR-0001).
             builder.Services.AddScoped<IEmotionalStateService, EmotionalStateService>();
             builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
             builder.Services.AddScoped<IEmotionFusionService, EmotionFusionService>();

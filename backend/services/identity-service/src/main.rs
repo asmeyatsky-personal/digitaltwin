@@ -126,12 +126,20 @@ async fn main() -> Result<()> {
         get_user: Arc::new(GetUser::new(users.clone())),
     };
 
-    // MCP over HTTP POST /mcp.
+    // HTTP router: MCP + JSON REST + healthcheck. Web/mobile call the REST
+    // endpoints; Claude-style agents call MCP; gRPC clients talk to the
+    // tonic server on grpc_addr (below).
     let mcp = Arc::new(IdentityMcp::new(services.clone()));
-    let http = Router::new()
+    let mcp_router = Router::new()
         .route("/mcp", post(handle_mcp))
-        .route("/healthz", axum::routing::get(|| async { "ok" }))
         .with_state(mcp);
+    let rest_router = identity_presentation::rest::router(services.clone());
+    let cors = tower_http::cors::CorsLayer::permissive();
+    let http = Router::new()
+        .route("/healthz", axum::routing::get(|| async { "ok" }))
+        .merge(mcp_router)
+        .merge(rest_router)
+        .layer(cors);
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], cfg.port));
     tracing::info!(%addr, "identity-service listening (gRPC + HTTP/MCP on same port)");
@@ -149,7 +157,12 @@ async fn main() -> Result<()> {
     });
 
     let grpc_task = tokio::spawn(async move {
+        // tonic-web lets browsers hit the same service via gRPC-Web
+        // (HTTP/1.1 + base64 framing). Mobile clients continue to use native
+        // gRPC on the same listener.
         tonic::transport::Server::builder()
+            .accept_http1(true)
+            .layer(tonic_web::GrpcWebLayer::new())
             .add_service(IdentityGrpc::new(services))
             .serve(grpc_addr)
             .await?;

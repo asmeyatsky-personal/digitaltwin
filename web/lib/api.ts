@@ -1,8 +1,14 @@
 // ---------------------------------------------------------------------------
-// API client for Digital Twin .NET backend
+// API client for the Rust + .NET backends.
+//
+// Authentication (`login`, `register`) hits the Rust identity-service on
+// `NEXT_PUBLIC_IDENTITY_URL`; everything else still hits the legacy .NET API
+// on `NEXT_PUBLIC_API_URL` until each context's Rust port lands per
+// MIGRATION.md.
 // ---------------------------------------------------------------------------
 
 import { getToken } from "./auth";
+import * as identity from "./identity";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
@@ -228,35 +234,54 @@ export async function fetchApi<T>(
 // Auth
 // ---------------------------------------------------------------------------
 
+// `username` is treated as the user's email — the Rust identity-service
+// authenticates on email. Legacy .NET login accepted "Username" which is now
+// mapped to the email field.
 export async function login(
   username: string,
   password: string
 ): Promise<{ token: string; refreshToken: string; user: UserProfile }> {
-  const res = await fetch(`${BASE_URL}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ Username: username, Password: password }),
+  const tokens = await identity.authenticate({
+    email: username,
+    password,
   });
 
-  const raw: LoginResponseRaw = await res.json();
-
-  if (!res.ok || !raw.success) {
-    throw new Error(raw.message ?? `Login failed with status ${res.status}`);
-  }
+  // Decode the sub claim from the access token to get the user id. Cheaper
+  // than a round-trip and the token is already trusted (freshly issued).
+  const [, payload] = tokens.accessToken.split(".");
+  const { sub } = JSON.parse(
+    atob(payload.replace(/-/g, "+").replace(/_/g, "/"))
+  ) as { sub: string };
 
   return {
-    token: raw.token!,
-    refreshToken: raw.refreshToken!,
-    user: {
-      id: raw.user!.userId,
-      username: raw.user!.username,
-      roles: raw.user!.roles,
-    },
+    token: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    user: { id: sub, username, roles: [] },
   };
 }
 
-export async function getProfile(): Promise<ApiResponse<UserProfile>> {
-  return fetchApi<UserProfile>("/api/auth/profile");
+export async function register(
+  email: string,
+  password: string
+): Promise<{ userId: string }> {
+  const out = await identity.registerUser({ email, password });
+  return { userId: out.userId };
+}
+
+export async function refreshSession(
+  refreshToken: string
+): Promise<{ token: string; refreshToken: string }> {
+  const out = await identity.refreshToken({ refreshToken });
+  return { token: out.accessToken, refreshToken: out.refreshToken };
+}
+
+export async function logout(refreshToken: string): Promise<void> {
+  await identity.revokeToken({ refreshToken });
+}
+
+export async function getProfile(userId: string): Promise<UserProfile> {
+  const u = await identity.getUser(userId);
+  return { id: u.userId, username: u.email, roles: [] };
 }
 
 // ---------------------------------------------------------------------------

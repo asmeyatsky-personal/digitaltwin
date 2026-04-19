@@ -408,104 +408,72 @@ async function requestMultipart<T>(
  * Login — sends {Username, Password} and maps the server response
  * (LoginResponse with PascalCase fields) into the mobile AuthTokens + UserProfile shape.
  */
+// Auth calls go to the Rust identity-service. Non-auth API calls still hit
+// the legacy .NET API on API_BASE until each bounded context's Rust port
+// lands per MIGRATION.md.
+import * as identity from "./identity";
+
+function sub(accessToken: string): string {
+  const [, payload] = accessToken.split(".");
+  return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))).sub;
+}
+
 export async function login(
   username: string,
   password: string
 ): Promise<ApiResponse<AuthTokens & { user: UserProfile }>> {
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ Username: username, Password: password } satisfies LoginRequest),
-  });
-
-  const raw: LoginResponseRaw = await res.json();
-
-  if (!res.ok || !raw.success) {
-    throw new Error(raw.message ?? `Login failed with status ${res.status}`);
-  }
-
+  const out = await identity.authenticate({ email: username, password });
+  const expiresIn = out.expiresAt
+    ? Math.max(
+        0,
+        Math.floor((new Date(out.expiresAt).getTime() - Date.now()) / 1000)
+      )
+    : 900;
   return {
     success: true,
     data: {
-      accessToken: raw.token!,
-      refreshToken: raw.refreshToken!,
-      expiresIn: raw.expiresIn,
-      user: {
-        id: raw.user!.userId,
-        username: raw.user!.username,
-        roles: raw.user!.roles,
-      },
+      accessToken: out.accessToken,
+      refreshToken: out.refreshToken,
+      expiresIn,
+      user: { id: sub(out.accessToken), username, roles: [] },
     },
   };
 }
 
-/**
- * Register — sends {Username, Email, Password, FirstName, LastName}
- * and maps the server RegisterResponse into mobile types.
- */
 export async function register(
   req: RegisterRequest
 ): Promise<ApiResponse<AuthTokens & { user: UserProfile }>> {
-  const res = await fetch(`${API_BASE}/api/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(req),
-  });
+  // The Rust identity context tracks email + password only. FirstName/LastName
+  // and Username move to a separate profile context later in the migration.
+  await identity.registerUser({ email: req.Email, password: req.Password });
+  // Immediately authenticate to return a token pair in the same response
+  // shape the mobile app already expects.
+  return login(req.Email, req.Password);
+}
 
-  const raw: RegisterResponseRaw = await res.json();
-
-  if (!res.ok || !raw.success) {
-    const err: ApiResponse<never> = {
-      success: false,
-      data: undefined as never,
-      message: raw.message ?? `Registration failed with status ${res.status}`,
-      error: raw.errors?.[0],
-    };
-    throw Object.assign(new Error(err.message!), { response: err });
-  }
-
+export async function refreshToken(
+  _accessToken: string,
+  refresh: string
+): Promise<ApiResponse<AuthTokens>> {
+  const out = await identity.refreshToken({ refreshToken: refresh });
+  const expiresIn = out.expiresAt
+    ? Math.max(
+        0,
+        Math.floor((new Date(out.expiresAt).getTime() - Date.now()) / 1000)
+      )
+    : 900;
   return {
     success: true,
     data: {
-      accessToken: raw.token!,
-      refreshToken: raw.refreshToken!,
-      expiresIn: 3600,
-      user: {
-        id: raw.user!.userId,
-        username: raw.user!.username,
-        roles: raw.user!.roles,
-      },
+      accessToken: out.accessToken,
+      refreshToken: out.refreshToken,
+      expiresIn,
     },
   };
 }
 
-/**
- * Refresh token — sends {Token, RefreshToken} per server's TokenRefreshRequest.
- */
-export async function refreshToken(
-  token: string,
-  refresh: string
-): Promise<ApiResponse<AuthTokens>> {
-  const res = await fetch(`${API_BASE}/api/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ Token: token, RefreshToken: refresh }),
-  });
-
-  const raw: TokenRefreshResponseRaw = await res.json();
-
-  if (!res.ok || !raw.success) {
-    throw new Error(raw.message ?? `Token refresh failed with status ${res.status}`);
-  }
-
-  return {
-    success: true,
-    data: {
-      accessToken: raw.token!,
-      refreshToken: raw.refreshToken!,
-      expiresIn: raw.expiresIn,
-    },
-  };
+export async function logoutRemote(refresh: string): Promise<void> {
+  await identity.revokeToken({ refreshToken: refresh });
 }
 
 // ---------------------------------------------------------------------------

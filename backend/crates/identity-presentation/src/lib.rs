@@ -13,6 +13,7 @@
 
 pub mod grpc;
 pub mod mcp;
+pub mod rest;
 
 use std::sync::Arc;
 

@@ -2,15 +2,96 @@ syntax = "proto3";
 
 package digitaltwin.conversation.v1;
 
-// Skeleton contract for the conversation bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service ConversationService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  // Writes -> MCP tools.
+  rpc StartConversation(StartConversationRequest) returns (StartConversationResponse);
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  rpc EndConversation(EndConversationRequest) returns (EndConversationResponse);
+
+  // Reads -> MCP resources.
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+  rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message StartConversationRequest {
+  string user_id = 1;
+  string title = 2;
+}
+message StartConversationResponse {
+  string conversation_id = 1;
+}
+
+message SendMessageRequest {
+  string conversation_id = 1;
+  string body = 2;
+}
+message SendMessageResponse {
+  string reply = 1;
+  EmotionalTone tone = 2;
+}
+
+message EndConversationRequest {
+  string conversation_id = 1;
+}
+message EndConversationResponse {}
+
+message GetHistoryRequest {
+  string conversation_id = 1;
+  uint32 limit = 2;
+}
+message GetHistoryResponse {
+  repeated Message messages = 1;
+}
+
+message ListConversationsRequest {
+  string user_id = 1;
+  uint32 limit = 2;
+}
+message ListConversationsResponse {
+  repeated ConversationSummary conversations = 1;
+}
+
+message Message {
+  string id = 1;
+  Role role = 2;
+  string body = 3;
+  EmotionalTone tone = 4;
+  google.protobuf.Timestamp sent_at = 5;
+}
+
+message ConversationSummary {
+  string id = 1;
+  string user_id = 2;
+  string title = 3;
+  ConversationStatus status = 4;
+  uint32 message_count = 5;
+  google.protobuf.Timestamp started_at = 6;
+  google.protobuf.Timestamp ended_at = 7;
+}
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_USER = 1;
+  ROLE_ASSISTANT = 2;
+  ROLE_SYSTEM = 3;
+}
+
+enum ConversationStatus {
+  CONVERSATION_STATUS_UNSPECIFIED = 0;
+  CONVERSATION_STATUS_ACTIVE = 1;
+  CONVERSATION_STATUS_ENDED = 2;
+}
+
+enum EmotionalTone {
+  EMOTIONAL_TONE_UNSPECIFIED = 0;
+  EMOTIONAL_TONE_NEUTRAL = 1;
+  EMOTIONAL_TONE_HAPPY = 2;
+  EMOTIONAL_TONE_SAD = 3;
+  EMOTIONAL_TONE_ANGRY = 4;
+  EMOTIONAL_TONE_ANXIOUS = 5;
+  EMOTIONAL_TONE_SURPRISED = 6;
+  EMOTIONAL_TONE_CALM = 7;
+  EMOTIONAL_TONE_EXCITED = 8;
 }
