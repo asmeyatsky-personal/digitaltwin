@@ -2,15 +2,15 @@ syntax = "proto3";
 
 package digitaltwin.notification.v1;
 
-// Skeleton contract for the notification bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
-
 service NotificationService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceResponse);
+  rpc UnregisterDevice(UnregisterDeviceRequest) returns (UnregisterDeviceResponse);
+  rpc SendPush(SendPushRequest) returns (SendPushResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
-}
+message RegisterDeviceRequest { string user_id = 1; string token = 2; string platform = 3; }
+message RegisterDeviceResponse {}
+message UnregisterDeviceRequest { string token = 1; }
+message UnregisterDeviceResponse {}
+message SendPushRequest { string user_id = 1; string title = 2; string body = 3; string data_json = 4; }
+message SendPushResponse { uint32 delivered = 1; }

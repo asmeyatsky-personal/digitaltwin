@@ -2,15 +2,15 @@ syntax = "proto3";
 
 package digitaltwin.voice.v1;
 
-// Skeleton contract for the voice bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
-
 service VoiceService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc RegisterVoice(RegisterVoiceRequest) returns (RegisterVoiceResponse);
+  rpc Synthesize(SynthesizeRequest) returns (SynthesizeResponse);
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
-}
+message RegisterVoiceRequest { string user_id = 1; string sample_url = 2; }
+message RegisterVoiceResponse {}
+message SynthesizeRequest { string user_id = 1; string text = 2; string emotion = 3; }
+message SynthesizeResponse { string job_id = 1; string audio_url = 2; }
+message GetJobRequest { string job_id = 1; }
+message GetJobResponse { string status = 1; string audio_url = 2; string text = 3; string emotion = 4; }

@@ -2,15 +2,26 @@ syntax = "proto3";
 
 package digitaltwin.avatar.v1;
 
-// Skeleton contract for the avatar bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service AvatarService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc GenerateAvatar(GenerateAvatarRequest) returns (GenerateAvatarResponse);
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+  rpc ListForUser(ListForUserRequest) returns (ListForUserResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message GenerateAvatarRequest { string user_id = 1; string photo_url = 2; }
+message GenerateAvatarResponse { string job_id = 1; }
+
+message GetJobRequest { string job_id = 1; }
+message GetJobResponse {
+  string id = 1;
+  string status = 2;
+  string result_url = 3;
+  string failure_reason = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp completed_at = 6;
 }
+
+message ListForUserRequest { string user_id = 1; }
+message ListForUserResponse { repeated GetJobResponse jobs = 1; }

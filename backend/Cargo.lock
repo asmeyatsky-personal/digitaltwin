@@ -339,15 +339,23 @@ name = "avatar-service"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "audit",
  "avatar-application",
  "avatar-contracts",
  "avatar-domain",
  "avatar-infrastructure",
  "avatar-presentation",
+ "axum 0.8.9",
+ "figment",
+ "http",
  "kernel",
+ "serde",
+ "sqlx",
  "telemetry",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
 ]
 
@@ -2812,6 +2820,7 @@ dependencies = [
  "kernel",
  "notification-domain",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
  "tracing",
 ]
@@ -2835,6 +2844,7 @@ dependencies = [
  "chrono",
  "kernel",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 
@@ -2889,15 +2899,23 @@ name = "notification-service"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "audit",
+ "axum 0.8.9",
+ "figment",
+ "http",
  "kernel",
  "notification-application",
  "notification-contracts",
  "notification-domain",
  "notification-infrastructure",
  "notification-presentation",
+ "serde",
+ "sqlx",
  "telemetry",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
 ]
 
@@ -5182,10 +5200,18 @@ name = "voice-service"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "audit",
+ "axum 0.8.9",
+ "figment",
+ "http",
  "kernel",
+ "serde",
+ "sqlx",
  "telemetry",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
  "voice-application",
  "voice-contracts",
