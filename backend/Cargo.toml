@@ -118,6 +118,9 @@ members = [
     "crates/notification-presentation",
     "services/notification-service",
 
+    # Shared infrastructure
+    "crates/firestore-client",
+
     # Integration test crates
     "crates/identity-integration-tests",
 ]
@@ -133,6 +136,7 @@ publish = false
 kernel = { path = "crates/kernel" }
 audit = { path = "crates/audit" }
 telemetry = { path = "crates/telemetry" }
+firestore-client = { path = "crates/firestore-client" }
 
 # Identity
 identity-contracts = { path = "crates/identity-contracts" }

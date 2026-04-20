@@ -2,15 +2,57 @@ syntax = "proto3";
 
 package digitaltwin.memory.v1;
 
-// Skeleton contract for the memory bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service MemoryService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc RecordMemory(RecordMemoryRequest) returns (RecordMemoryResponse);
+  rpc GetTimeline(GetTimelineRequest) returns (GetTimelineResponse);
+  rpc AddLifeEvent(AddLifeEventRequest) returns (AddLifeEventResponse);
+  rpc GetUpcomingEvents(GetUpcomingEventsRequest) returns (GetUpcomingEventsResponse);
+  rpc GetConversationContext(GetConversationContextRequest) returns (GetConversationContextResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message RecordMemoryRequest {
+  string user_id = 1;
+  string content = 2;
+  string mood = 3;
+  repeated string tags = 4;
+}
+message RecordMemoryResponse { string memory_id = 1; }
+
+message GetTimelineRequest { string user_id = 1; uint32 limit = 2; }
+message GetTimelineResponse { repeated Memory memories = 1; }
+
+message AddLifeEventRequest {
+  string user_id = 1;
+  string title = 2;
+  string description = 3;
+  google.protobuf.Timestamp event_date = 4;
+  string category = 5;
+  int32 emotional_impact = 6;
+  bool is_recurring = 7;
+}
+message AddLifeEventResponse { string event_id = 1; }
+
+message GetUpcomingEventsRequest { string user_id = 1; uint32 horizon_days = 2; }
+message GetUpcomingEventsResponse { repeated LifeEvent events = 1; }
+
+message GetConversationContextRequest { string user_id = 1; }
+message GetConversationContextResponse { string context_text = 1; }
+
+message Memory {
+  string id = 1;
+  string content = 2;
+  string mood = 3;
+  repeated string tags = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+message LifeEvent {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  google.protobuf.Timestamp event_date = 4;
+  string category = 5;
+  int32 emotional_impact = 6;
+  bool is_recurring = 7;
 }

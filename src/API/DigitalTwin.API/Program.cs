@@ -285,9 +285,9 @@ namespace DigitalTwin.API
             builder.Services.AddScoped<IExportService, ExportService>();
             builder.Services.AddScoped<IWebhookService, WebhookService>();
             // Conversation moved to the Rust conversation-service (ADR-0001).
-            builder.Services.AddScoped<IEmotionalStateService, EmotionalStateService>();
+            // Emotion moved to the Rust emotion-service (ADR-0001).
             builder.Services.AddScoped<IEmbeddingService, EmbeddingService>();
-            builder.Services.AddScoped<IEmotionFusionService, EmotionFusionService>();
+            // EmotionFusion moved to the Rust emotion-service.
             builder.Services.AddScoped<IUsageLimitService, UsageLimitService>();
             builder.Services.AddScoped<IProactiveCheckInService, ProactiveCheckInService>();
             builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
@@ -309,7 +309,7 @@ namespace DigitalTwin.API
             builder.Services.AddScoped<IBiometricService, BiometricService>();
             builder.Services.AddScoped<ICoachingService, CoachingService>();
             builder.Services.AddScoped<ISharedExperienceService, SharedExperienceService>();
-            builder.Services.AddScoped<IPersonalHistoryService, PersonalHistoryService>();
+            // PersonalHistory moved to the Rust memory-service (ADR-0001).
             builder.Services.AddScoped<IFamilyService, FamilyService>();
             builder.Services.AddScoped<IAchievementService, AchievementService>();
             builder.Services.AddScoped<ICommunityService, CommunityService>();

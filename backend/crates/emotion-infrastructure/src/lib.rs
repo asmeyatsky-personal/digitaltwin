@@ -1,12 +1,11 @@
-//! Layer: infrastructure (emotion bounded context).
-//! Ports: defined in this context's domain or application crate; adapters
-//! implement them in `-infrastructure`.
-//! MCP integration: one MCP server per bounded context (§3.5) — lives in
-//! `-presentation` for this context.
-//! Stack choice: canonical (Rust backend per ADR-0001).
-//!
-//! Stub scaffold. Domain, use cases, adapters, and MCP tools land as the
-//! feature ports from the legacy .NET service.
+//! Layer: infrastructure (Emotion bounded context).
 
 #![forbid(unsafe_code)]
 #![deny(clippy::all)]
+#![allow(clippy::missing_errors_doc)]
+
+pub mod in_memory;
+pub mod postgres_reading_repository;
+
+pub use in_memory::InMemoryReadingRepository;
+pub use postgres_reading_repository::PostgresReadingRepository;

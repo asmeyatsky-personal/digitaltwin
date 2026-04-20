@@ -2,15 +2,69 @@ syntax = "proto3";
 
 package digitaltwin.emotion.v1;
 
-// Skeleton contract for the emotion bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service EmotionService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc ReportReading(ReportReadingRequest) returns (ReportReadingResponse);
+  rpc GetCurrent(GetCurrentRequest) returns (GetCurrentResponse);
+  rpc GetTimeline(GetTimelineRequest) returns (GetTimelineResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message ReportReadingRequest {
+  string user_id = 1;
+  Modality modality = 2;
+  Tone tone = 3;
+  float confidence = 4;
+}
+message ReportReadingResponse {
+  string reading_id = 1;
+}
+
+message GetCurrentRequest {
+  string user_id = 1;
+  uint32 window_seconds = 2;
+}
+message GetCurrentResponse {
+  Tone tone = 1;
+  float confidence = 2;
+  uint32 reading_count = 3;
+  google.protobuf.Timestamp window_start = 4;
+  google.protobuf.Timestamp window_end = 5;
+}
+
+message GetTimelineRequest {
+  string user_id = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+}
+message GetTimelineResponse {
+  repeated Reading readings = 1;
+}
+
+message Reading {
+  string id = 1;
+  Modality modality = 2;
+  Tone tone = 3;
+  float confidence = 4;
+  google.protobuf.Timestamp recorded_at = 5;
+}
+
+enum Modality {
+  MODALITY_UNSPECIFIED = 0;
+  MODALITY_FACE = 1;
+  MODALITY_VOICE = 2;
+  MODALITY_TEXT = 3;
+  MODALITY_BIOMETRIC = 4;
+}
+
+enum Tone {
+  TONE_UNSPECIFIED = 0;
+  TONE_NEUTRAL = 1;
+  TONE_HAPPY = 2;
+  TONE_SAD = 3;
+  TONE_ANGRY = 4;
+  TONE_ANXIOUS = 5;
+  TONE_SURPRISED = 6;
+  TONE_CALM = 7;
+  TONE_EXCITED = 8;
 }
