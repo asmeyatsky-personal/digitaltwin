@@ -2,15 +2,36 @@ syntax = "proto3";
 
 package digitaltwin.community.v1;
 
-// Skeleton contract for the community bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service CommunityService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
+  rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse);
+  rpc JoinGroup(JoinGroupRequest) returns (JoinGroupResponse);
+  rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
+  rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message CreateGroupRequest { string name = 1; string description = 2; string category = 3; bool is_moderated = 4; string created_by = 5; }
+message CreateGroupResponse { string group_id = 1; }
+
+message ListGroupsRequest { string category = 1; uint32 limit = 2; }
+message ListGroupsResponse { repeated Group groups = 1; }
+
+message JoinGroupRequest { string group_id = 1; string user_id = 2; }
+message JoinGroupResponse {}
+
+message CreatePostRequest { string group_id = 1; string author = 2; string content = 3; bool is_anonymous = 4; }
+message CreatePostResponse { string post_id = 1; }
+
+message ListPostsRequest { string group_id = 1; uint32 limit = 2; }
+message ListPostsResponse { repeated Post posts = 1; }
+
+message Group {
+  string id = 1; string name = 2; string description = 3; string category = 4;
+  bool is_moderated = 5; string created_by = 6; google.protobuf.Timestamp created_at = 7;
+}
+message Post {
+  string id = 1; string group_id = 2; string author = 3;
+  string content = 4; bool is_anonymous = 5; google.protobuf.Timestamp created_at = 6;
 }

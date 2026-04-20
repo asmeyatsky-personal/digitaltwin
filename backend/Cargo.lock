@@ -737,15 +737,23 @@ name = "community-service"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "audit",
+ "axum 0.8.9",
  "community-application",
  "community-contracts",
  "community-domain",
  "community-infrastructure",
  "community-presentation",
+ "figment",
+ "http",
  "kernel",
+ "serde",
+ "sqlx",
  "telemetry",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
 ]
 

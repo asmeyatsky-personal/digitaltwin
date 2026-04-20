@@ -312,11 +312,7 @@ namespace DigitalTwin.API
             // PersonalHistory moved to the Rust memory-service (ADR-0001).
             // Family moved to the Rust family-service (ADR-0001).
             // Achievement moved to the Rust achievement-service (ADR-0001).
-            builder.Services.AddScoped<ICommunityService, CommunityService>();
-            builder.Services.AddScoped<IModerationService, ModerationService>();
-            builder.Services.AddScoped<ICreativeService, CreativeService>();
-            builder.Services.AddScoped<ITherapyService, TherapyService>();
-            builder.Services.AddScoped<ILearningService, LearningService>();
+            // Community/Moderation/Creative/Therapy/Learning moved to their Rust services (ADR-0001).
 
             // Rate limiting — Redis-backed in production, in-memory fallback
             if (!string.IsNullOrEmpty(redisConnection))
