@@ -2,15 +2,25 @@ syntax = "proto3";
 
 package digitaltwin.moderation.v1;
 
-// Skeleton contract for the moderation bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service ModerationService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc ReportContent(ReportContentRequest) returns (ReportContentResponse);
+  rpc ReviewReport(ReviewReportRequest) returns (ReviewReportResponse);
+  rpc ListPending(ListPendingRequest) returns (ListPendingResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message ReportContentRequest { string reporter = 1; string content_type = 2; string content_id = 3; string reason = 4; }
+message ReportContentResponse { string report_id = 1; }
+
+message ReviewReportRequest { string report_id = 1; string reviewer = 2; string status = 3; string notes = 4; }
+message ReviewReportResponse {}
+
+message ListPendingRequest { uint32 limit = 1; }
+message ListPendingResponse { repeated Report reports = 1; }
+
+message Report {
+  string id = 1; string reporter = 2; string content_type = 3; string content_id = 4;
+  string reason = 5; string status = 6; string notes = 7;
+  google.protobuf.Timestamp created_at = 8; google.protobuf.Timestamp reviewed_at = 9;
 }

@@ -2,15 +2,34 @@ syntax = "proto3";
 
 package digitaltwin.therapy.v1;
 
-// Skeleton contract for the therapy bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service TherapyService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc RegisterTherapist(RegisterTherapistRequest) returns (RegisterTherapistResponse);
+  rpc ListTherapists(ListTherapistsRequest) returns (ListTherapistsResponse);
+  rpc SubmitScreening(SubmitScreeningRequest) returns (SubmitScreeningResponse);
+  rpc ListScreeningsForUser(ListScreeningsForUserRequest) returns (ListScreeningsForUserResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message RegisterTherapistRequest { string name = 1; string credentials = 2; repeated string specializations = 3; uint32 rate_per_session = 4; }
+message RegisterTherapistResponse { string therapist_id = 1; }
+
+message ListTherapistsRequest { uint32 limit = 1; }
+message ListTherapistsResponse { repeated Therapist therapists = 1; }
+
+message SubmitScreeningRequest { string user_id = 1; string screening_type = 2; repeated uint32 responses = 3; }
+message SubmitScreeningResponse { string screening_id = 1; uint32 score = 2; string severity = 3; }
+
+message ListScreeningsForUserRequest { string user_id = 1; uint32 limit = 2; }
+message ListScreeningsForUserResponse { repeated Screening screenings = 1; }
+
+message Therapist {
+  string id = 1; string name = 2; string credentials = 3;
+  repeated string specializations = 4; uint32 rate_per_session = 5;
+  bool is_verified = 6; google.protobuf.Timestamp created_at = 7;
+}
+message Screening {
+  string id = 1; string screening_type = 2;
+  uint32 score = 3; string severity = 4;
+  google.protobuf.Timestamp completed_at = 5;
 }

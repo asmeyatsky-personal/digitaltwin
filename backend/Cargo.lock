@@ -2800,15 +2800,23 @@ name = "moderation-service"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "audit",
+ "axum 0.8.9",
+ "figment",
+ "http",
  "kernel",
  "moderation-application",
  "moderation-contracts",
  "moderation-domain",
  "moderation-infrastructure",
  "moderation-presentation",
+ "serde",
+ "sqlx",
  "telemetry",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
 ]
 
@@ -4536,8 +4544,14 @@ name = "therapy-service"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "audit",
+ "axum 0.8.9",
+ "figment",
+ "http",
  "kernel",
+ "serde",
+ "sqlx",
  "telemetry",
  "therapy-application",
  "therapy-contracts",
@@ -4545,6 +4559,8 @@ dependencies = [
  "therapy-infrastructure",
  "therapy-presentation",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
 ]
 
