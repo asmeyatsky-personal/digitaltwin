@@ -2,15 +2,28 @@ syntax = "proto3";
 
 package digitaltwin.creative.v1;
 
-// Skeleton contract for the creative bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service CreativeService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc CreateWork(CreateWorkRequest) returns (CreateWorkResponse);
+  rpc ShareWork(ShareWorkRequest) returns (ShareWorkResponse);
+  rpc GetWork(GetWorkRequest) returns (GetWorkResponse);
+  rpc ListWorks(ListWorksRequest) returns (ListWorksResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message CreateWorkRequest { string user_id = 1; string work_type = 2; string title = 3; string content = 4; string mood = 5; }
+message CreateWorkResponse { string work_id = 1; }
+
+message ShareWorkRequest { string work_id = 1; }
+message ShareWorkResponse {}
+
+message GetWorkRequest { string work_id = 1; }
+message GetWorkResponse { Work work = 1; }
+
+message ListWorksRequest { string user_id = 1; string work_type = 2; uint32 limit = 3; }
+message ListWorksResponse { repeated Work works = 1; }
+
+message Work {
+  string id = 1; string work_type = 2; string title = 3; string content = 4;
+  string mood = 5; bool is_shared = 6; google.protobuf.Timestamp created_at = 7;
 }

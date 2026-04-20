@@ -1011,15 +1011,23 @@ name = "creative-service"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "audit",
+ "axum 0.8.9",
  "creative-application",
  "creative-contracts",
  "creative-domain",
  "creative-infrastructure",
  "creative-presentation",
+ "figment",
+ "http",
  "kernel",
+ "serde",
+ "sqlx",
  "telemetry",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
 ]
 
@@ -2418,15 +2426,23 @@ name = "learning-service"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "audit",
+ "axum 0.8.9",
+ "figment",
+ "http",
  "kernel",
  "learning-application",
  "learning-contracts",
  "learning-domain",
  "learning-infrastructure",
  "learning-presentation",
+ "serde",
+ "sqlx",
  "telemetry",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
 ]
 

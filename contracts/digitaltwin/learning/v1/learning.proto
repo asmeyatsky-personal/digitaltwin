@@ -2,15 +2,37 @@ syntax = "proto3";
 
 package digitaltwin.learning.v1;
 
-// Skeleton contract for the learning bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service LearningService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc CreatePath(CreatePathRequest) returns (CreatePathResponse);
+  rpc ListPaths(ListPathsRequest) returns (ListPathsResponse);
+  rpc StartPath(StartPathRequest) returns (StartPathResponse);
+  rpc CompleteModule(CompleteModuleRequest) returns (CompleteModuleResponse);
+  rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message CreatePathRequest { string title = 1; string description = 2; string category = 3; repeated string modules = 4; uint32 estimated_minutes = 5; }
+message CreatePathResponse { string path_id = 1; }
+
+message ListPathsRequest { string category = 1; }
+message ListPathsResponse { repeated Path paths = 1; }
+
+message StartPathRequest { string user_id = 1; string path_id = 2; }
+message StartPathResponse {}
+
+message CompleteModuleRequest { string user_id = 1; string path_id = 2; string reflection_notes = 3; }
+message CompleteModuleResponse { bool completed = 1; }
+
+message GetProgressRequest { string user_id = 1; }
+message GetProgressResponse { repeated Progress progress = 1; }
+
+message Path {
+  string id = 1; string title = 2; string description = 3; string category = 4;
+  repeated string modules = 5; uint32 estimated_minutes = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+message Progress {
+  string path_id = 1; uint32 current_module = 2; string reflection_notes = 3;
+  google.protobuf.Timestamp started_at = 4; google.protobuf.Timestamp completed_at = 5;
 }
