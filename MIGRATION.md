@@ -50,20 +50,20 @@ Each context owns five crates plus a service binary:
 
 | Context         | Scaffold | Domain | App | Infra | Presentation | MCP server | Notes |
 |-----------------|:--:|:--:|:--:|:--:|:--:|:--:|-------|
-| identity        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Pilot — Argon2id, RS256 JWT, audit, Postgres |
-| conversation    | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Port from `Core/Services/ConversationService.cs` |
-| emotion         | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Fusion of face/voice/text; unify taxonomy per AD-1 |
-| avatar          | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Port from `services/avatar-generation-service` |
-| voice           | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Port from `services/voice-service` |
-| memory          | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Firestore-backed per ADR-0003 |
-| family          | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Postgres — strong relational invariants |
-| achievement     | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Postgres |
-| community       | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Firestore for posts, Postgres for membership |
-| moderation      | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Hooks into community writes |
-| therapy         | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | PHQ-9/GAD-7 scoring; clinical-screening invariants |
-| learning        | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Firestore for path progress |
-| creative        | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Firestore |
-| notification    | ✅ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | Expo push + FCM/APNs |
+| identity        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Argon2id, RS256 JWT, Postgres + audit; E2E tested |
+| conversation    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Anthropic LLM, AD-1 unified tone; Postgres |
+| emotion         | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Multi-modal fusion (AD-1); weighted by modality |
+| avatar          | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Python avatar-generation-service proxy |
+| voice           | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Python voice-service proxy (clone + TTS) |
+| memory          | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Firestore for memories + life events |
+| family          | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Postgres |
+| achievement     | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Postgres |
+| community       | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Postgres (posts could move to Firestore later) |
+| moderation      | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Postgres |
+| therapy         | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | PHQ-9/GAD-7 scoring with APA cut-points |
+| learning        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Postgres |
+| creative        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Postgres |
+| notification    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Postgres + Expo Push HTTP adapter |
 
 ✅ = done · ⬜ = to do
 
@@ -109,9 +109,19 @@ bugs flagged in AUDIT §1.2.
 
 ## Retiring legacy artefacts
 
-- `k8s/` — delete manifests as each service reaches Cloud Run parity (ADR-0002)
-- `src/` (.NET) — delete per-context controllers/services/entities as each
-  context reaches Rust parity
+- `k8s/` — **deleted** (ADR-0002; Cloud Run is the canonical target)
+- `src/` (.NET) — **deleted**; all 14 contexts live in `backend/` now
+- `DigitalTwin.sln` — **deleted**
 - `docker-compose.yml` — keep for local dev only; production is Cloud Run
-- Elasticsearch references — delete; Firestore native indexes replace the
-  current (unused) search path
+- Elasticsearch references — still present in docker-compose.yml; remove
+  when local-dev stops needing it
+- `Assets/` (Unity building-management code) — pre-dates the emotional
+  companion scope; retained only as reference and not built by CI
+
+## Features not yet ported
+
+The retired `.NET src/` had a handful of features without a 1:1 Rust context:
+Biometric (HealthKit/Google Fit), Coaching (goal tracking), Insights
+(aggregate analytics), Subscription (billing), CheckIn (proactive prompts).
+Each maps to a future Rust bounded context using the same scaffold pattern
+(`scripts/scaffold_context.py`).

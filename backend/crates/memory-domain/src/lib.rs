@@ -85,7 +85,14 @@ impl Memory {
         if content.trim().is_empty() {
             return Err(DomainError::EmptyContent);
         }
-        Ok(Self { id, user_id, content, mood, tags, created_at })
+        Ok(Self {
+            id,
+            user_id,
+            content,
+            mood,
+            tags,
+            created_at,
+        })
     }
 }
 
@@ -102,6 +109,7 @@ pub struct LifeEvent {
 }
 
 impl LifeEvent {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: EntityId<LifeEvent>,
         user_id: EntityId<UserRef>,
@@ -167,8 +175,15 @@ mod tests {
     #[test]
     fn memory_rejects_empty_content() {
         assert_eq!(
-            Memory::new(EntityId::new(), EntityId::new(), "  ".into(), "calm".into(), vec![], Utc::now())
-                .unwrap_err(),
+            Memory::new(
+                EntityId::new(),
+                EntityId::new(),
+                "  ".into(),
+                "calm".into(),
+                vec![],
+                Utc::now()
+            )
+            .unwrap_err(),
             DomainError::EmptyContent
         );
     }
@@ -176,17 +191,30 @@ mod tests {
     #[test]
     fn life_event_clamps_impact() {
         let e = LifeEvent::new(
-            EntityId::new(), EntityId::new(),
-            "Wedding".into(), "Big day".into(),
-            Utc::now(), LifeEventCategory::Milestone,
-            99, false,
-        ).unwrap();
+            EntityId::new(),
+            EntityId::new(),
+            "Wedding".into(),
+            "Big day".into(),
+            Utc::now(),
+            LifeEventCategory::Milestone,
+            99,
+            false,
+        )
+        .unwrap();
         assert_eq!(e.emotional_impact, 5);
     }
 
     #[test]
     fn category_parse_roundtrip() {
-        for v in ["career", "relationship", "health", "education", "milestone", "loss", "other"] {
+        for v in [
+            "career",
+            "relationship",
+            "health",
+            "education",
+            "milestone",
+            "loss",
+            "other",
+        ] {
             let c = LifeEventCategory::parse(v).expect(v);
             assert_eq!(c.as_str(), v);
         }

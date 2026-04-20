@@ -11,28 +11,55 @@ use moderation_domain::{ContentReport, Reason, ReportRepository, Status, StoreEr
 use sqlx::{PgPool, Row, postgres::PgRow};
 use uuid::Uuid;
 
-pub struct PostgresReportRepository { pool: PgPool }
+pub struct PostgresReportRepository {
+    pool: PgPool,
+}
 impl PostgresReportRepository {
-    pub fn new(pool: PgPool) -> Self { Self { pool } }
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
     fn row_to_report(r: PgRow) -> Result<ContentReport, StoreError> {
-        let id: Uuid = r.try_get("id").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let reporter: Uuid = r.try_get("reporter").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let content_type: String = r.try_get("content_type").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let content_id: String = r.try_get("content_id").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let reason: String = r.try_get("reason").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let status: String = r.try_get("status").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let reviewed_by: Option<Uuid> = r.try_get("reviewed_by").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let notes: Option<String> = r.try_get("notes").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let created_at: DateTime<Utc> = r.try_get("created_at").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let reviewed_at: Option<DateTime<Utc>> = r.try_get("reviewed_at").map_err(|e| StoreError::Backend(e.to_string()))?;
+        let id: Uuid = r
+            .try_get("id")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let reporter: Uuid = r
+            .try_get("reporter")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let content_type: String = r
+            .try_get("content_type")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let content_id: String = r
+            .try_get("content_id")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let reason: String = r
+            .try_get("reason")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let status: String = r
+            .try_get("status")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let reviewed_by: Option<Uuid> = r
+            .try_get("reviewed_by")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let notes: Option<String> = r
+            .try_get("notes")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let created_at: DateTime<Utc> = r
+            .try_get("created_at")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let reviewed_at: Option<DateTime<Utc>> = r
+            .try_get("reviewed_at")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
         Ok(ContentReport {
             id: EntityId::from_uuid(id),
             reporter: EntityId::from_uuid(reporter),
-            content_type, content_id,
+            content_type,
+            content_id,
             reason: Reason::parse(&reason).map_err(|e| StoreError::Backend(e.to_string()))?,
             status: Status::parse(&status).map_err(|e| StoreError::Backend(e.to_string()))?,
             reviewed_by: reviewed_by.map(EntityId::from_uuid),
-            notes, created_at, reviewed_at,
+            notes,
+            created_at,
+            reviewed_at,
         })
     }
 }

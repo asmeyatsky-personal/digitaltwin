@@ -30,9 +30,13 @@ struct Config {
     #[serde(default = "default_log_level")]
     log_level: String,
 }
-fn default_log_level() -> String { "info".into() }
+fn default_log_level() -> String {
+    "info".into()
+}
 
-struct PostgresAuditLedger { pool: PgPool }
+struct PostgresAuditLedger {
+    pool: PgPool,
+}
 #[async_trait]
 impl AuditPort for PostgresAuditLedger {
     async fn append(&self, e: AuditEvent) -> Result<(), AuditError> {
@@ -49,19 +53,27 @@ async fn main() -> Result<()> {
     let cfg: Config = Figment::new()
         .merge(Env::prefixed("FAMILY_"))
         .merge(Env::raw().only(&["PORT"]))
-        .extract().context("config")?;
+        .extract()
+        .context("config")?;
     let _g = telemetry::init(telemetry::Config {
         service_name: "family-service".into(),
         otlp_endpoint: cfg.otel_exporter_otlp_endpoint.clone(),
         log_level: cfg.log_level.clone(),
     })?;
-    let pool = PgPoolOptions::new().max_connections(10).acquire_timeout(Duration::from_secs(5))
-        .connect(&cfg.database_url).await?;
+    let pool = PgPoolOptions::new()
+        .max_connections(10)
+        .acquire_timeout(Duration::from_secs(5))
+        .connect(&cfg.database_url)
+        .await?;
     let repo = Arc::new(PostgresFamilyRepository::new(pool.clone()));
     let audit = Arc::new(PostgresAuditLedger { pool });
     let clock = Arc::new(SystemClock);
     let services = FamilyServices {
-        create: Arc::new(CreateFamily::new(repo.clone(), audit.clone(), clock.clone())),
+        create: Arc::new(CreateFamily::new(
+            repo.clone(),
+            audit.clone(),
+            clock.clone(),
+        )),
         add_member: Arc::new(AddMember::new(repo.clone(), audit, clock)),
         get: Arc::new(GetFamily::new(repo.clone())),
         list_members: Arc::new(ListMembers::new(repo.clone())),
@@ -70,15 +82,19 @@ async fn main() -> Result<()> {
     let mcp = Arc::new(FamilyMcp::new(services.clone()));
     let http = Router::new()
         .route("/healthz", axum::routing::get(|| async { "ok" }))
-        .route("/mcp", post(handle_mcp)).with_state(mcp)
+        .route("/mcp", post(handle_mcp))
+        .with_state(mcp)
         .merge(family_presentation::router(services))
         .layer(tower_http::cors::CorsLayer::permissive());
-    let addr = std::net::SocketAddr::from(([0,0,0,0], cfg.port));
+    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], cfg.port));
     tracing::info!(%addr, "family-service listening");
     axum::serve(tokio::net::TcpListener::bind(addr).await?, http).await?;
     Ok(())
 }
 
-async fn handle_mcp(State(mcp): State<Arc<FamilyMcp>>, Json(req): Json<JsonRpcRequest>) -> Json<JsonRpcResponse> {
+async fn handle_mcp(
+    State(mcp): State<Arc<FamilyMcp>>,
+    Json(req): Json<JsonRpcRequest>,
+) -> Json<JsonRpcResponse> {
     Json(mcp.handle(req).await)
 }

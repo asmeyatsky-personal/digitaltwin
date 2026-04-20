@@ -5,7 +5,7 @@
 #![allow(clippy::missing_errors_doc)]
 
 use audit::{Actor, AuditEvent, AuditPort, hash_state};
-use chrono::{DateTime, Duration as ChronoDuration, Utc};
+use chrono::{DateTime, Utc};
 use kernel::{Clock, EntityId};
 use memory_domain::{
     DomainError, LifeEvent, LifeEventCategory, LifeEventStore, Memory, MemoryStore, StoreError,
@@ -42,8 +42,16 @@ pub struct RecordMemory {
     clock: Arc<dyn Clock>,
 }
 impl RecordMemory {
-    pub fn new(store: Arc<dyn MemoryStore>, audit: Arc<dyn AuditPort>, clock: Arc<dyn Clock>) -> Self {
-        Self { store, audit, clock }
+    pub fn new(
+        store: Arc<dyn MemoryStore>,
+        audit: Arc<dyn AuditPort>,
+        clock: Arc<dyn Clock>,
+    ) -> Self {
+        Self {
+            store,
+            audit,
+            clock,
+        }
     }
     pub async fn execute(&self, i: RecordMemoryInput) -> Result<RecordMemoryOutput, UseCaseError> {
         let now = self.clock.now();
@@ -69,8 +77,14 @@ pub struct GetTimeline {
     store: Arc<dyn MemoryStore>,
 }
 impl GetTimeline {
-    pub fn new(store: Arc<dyn MemoryStore>) -> Self { Self { store } }
-    pub async fn execute(&self, user_id: EntityId<UserRef>, limit: u32) -> Result<Vec<Memory>, UseCaseError> {
+    pub fn new(store: Arc<dyn MemoryStore>) -> Self {
+        Self { store }
+    }
+    pub async fn execute(
+        &self,
+        user_id: EntityId<UserRef>,
+        limit: u32,
+    ) -> Result<Vec<Memory>, UseCaseError> {
         Ok(self.store.list_for_user(user_id, limit).await?)
     }
 }
@@ -92,14 +106,28 @@ pub struct AddLifeEvent {
     clock: Arc<dyn Clock>,
 }
 impl AddLifeEvent {
-    pub fn new(store: Arc<dyn LifeEventStore>, audit: Arc<dyn AuditPort>, clock: Arc<dyn Clock>) -> Self {
-        Self { store, audit, clock }
+    pub fn new(
+        store: Arc<dyn LifeEventStore>,
+        audit: Arc<dyn AuditPort>,
+        clock: Arc<dyn Clock>,
+    ) -> Self {
+        Self {
+            store,
+            audit,
+            clock,
+        }
     }
     pub async fn execute(&self, i: AddLifeEventInput) -> Result<EntityId<LifeEvent>, UseCaseError> {
         let id = EntityId::<LifeEvent>::new();
         let event = LifeEvent::new(
-            id, i.user_id, i.title, i.description,
-            i.event_date, i.category, i.emotional_impact, i.is_recurring,
+            id,
+            i.user_id,
+            i.title,
+            i.description,
+            i.event_date,
+            i.category,
+            i.emotional_impact,
+            i.is_recurring,
         )?;
         self.store.save(&event).await?;
         let now = self.clock.now();
@@ -122,8 +150,14 @@ pub struct GetUpcoming {
     store: Arc<dyn LifeEventStore>,
 }
 impl GetUpcoming {
-    pub fn new(store: Arc<dyn LifeEventStore>) -> Self { Self { store } }
-    pub async fn execute(&self, user_id: EntityId<UserRef>, horizon_days: u32) -> Result<Vec<LifeEvent>, UseCaseError> {
+    pub fn new(store: Arc<dyn LifeEventStore>) -> Self {
+        Self { store }
+    }
+    pub async fn execute(
+        &self,
+        user_id: EntityId<UserRef>,
+        horizon_days: u32,
+    ) -> Result<Vec<LifeEvent>, UseCaseError> {
         Ok(self.store.upcoming(user_id, horizon_days).await?)
     }
 }
@@ -134,8 +168,16 @@ pub struct GetConversationContext {
     clock: Arc<dyn Clock>,
 }
 impl GetConversationContext {
-    pub fn new(memories: Arc<dyn MemoryStore>, events: Arc<dyn LifeEventStore>, clock: Arc<dyn Clock>) -> Self {
-        Self { memories, events, clock }
+    pub fn new(
+        memories: Arc<dyn MemoryStore>,
+        events: Arc<dyn LifeEventStore>,
+        clock: Arc<dyn Clock>,
+    ) -> Self {
+        Self {
+            memories,
+            events,
+            clock,
+        }
     }
     /// Return the compact context snippet the Conversation LLM adapter
     /// prepends to its system prompt. Includes the 3 most recent memories
@@ -155,7 +197,12 @@ impl GetConversationContext {
         if !upcoming.is_empty() {
             out.push_str("Upcoming events:\n");
             for e in &upcoming {
-                out.push_str(&format!("- {} on {} ({})\n", e.title, e.event_date.date_naive(), e.category.as_str()));
+                out.push_str(&format!(
+                    "- {} on {} ({})\n",
+                    e.title,
+                    e.event_date.date_naive(),
+                    e.category.as_str()
+                ));
             }
         }
         Ok(out)
@@ -163,5 +210,7 @@ impl GetConversationContext {
     // Silence unused-warning; `clock` is a design placeholder for future
     // timezone-aware projections.
     #[allow(dead_code)]
-    fn _touch(&self) -> DateTime<Utc> { self.clock.now() }
+    fn _touch(&self) -> DateTime<Utc> {
+        self.clock.now()
+    }
 }

@@ -131,12 +131,11 @@ async fn timeline(
         .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
         .map(|d| d.with_timezone(&chrono::Utc))
         .unwrap_or_else(|| chrono::Utc::now() - chrono::Duration::days(7));
-    let to = q
-        .to
-        .as_deref()
-        .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-        .map(|d| d.with_timezone(&chrono::Utc))
-        .unwrap_or_else(chrono::Utc::now);
+    let to =
+        q.to.as_deref()
+            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+            .map(|d| d.with_timezone(&chrono::Utc))
+            .unwrap_or_else(chrono::Utc::now);
     let out = s
         .timeline
         .execute(GetTimelineInput { user_id, from, to })

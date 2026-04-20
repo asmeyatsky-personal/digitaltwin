@@ -20,15 +20,29 @@ impl PostgresReadingRepository {
     }
 
     fn map_row(row: PgRow) -> Result<EmotionReading, RepositoryError> {
-        let id: Uuid = row.try_get("id").map_err(|e| RepositoryError::Backend(e.to_string()))?;
-        let user_id: Uuid = row.try_get("user_id").map_err(|e| RepositoryError::Backend(e.to_string()))?;
-        let modality: String = row.try_get("modality").map_err(|e| RepositoryError::Backend(e.to_string()))?;
-        let tone: String = row.try_get("tone").map_err(|e| RepositoryError::Backend(e.to_string()))?;
-        let confidence: f32 = row.try_get("confidence").map_err(|e| RepositoryError::Backend(e.to_string()))?;
-        let recorded_at: DateTime<Utc> = row.try_get("recorded_at").map_err(|e| RepositoryError::Backend(e.to_string()))?;
+        let id: Uuid = row
+            .try_get("id")
+            .map_err(|e| RepositoryError::Backend(e.to_string()))?;
+        let user_id: Uuid = row
+            .try_get("user_id")
+            .map_err(|e| RepositoryError::Backend(e.to_string()))?;
+        let modality: String = row
+            .try_get("modality")
+            .map_err(|e| RepositoryError::Backend(e.to_string()))?;
+        let tone: String = row
+            .try_get("tone")
+            .map_err(|e| RepositoryError::Backend(e.to_string()))?;
+        let confidence: f32 = row
+            .try_get("confidence")
+            .map_err(|e| RepositoryError::Backend(e.to_string()))?;
+        let recorded_at: DateTime<Utc> = row
+            .try_get("recorded_at")
+            .map_err(|e| RepositoryError::Backend(e.to_string()))?;
 
-        let modality = Modality::parse(&modality).map_err(|e| RepositoryError::Backend(e.to_string()))?;
-        let tone = UnifiedTone::parse(&tone).map_err(|e| RepositoryError::Backend(e.to_string()))?;
+        let modality =
+            Modality::parse(&modality).map_err(|e| RepositoryError::Backend(e.to_string()))?;
+        let tone =
+            UnifiedTone::parse(&tone).map_err(|e| RepositoryError::Backend(e.to_string()))?;
 
         EmotionReading::new(
             ReadingId::from_uuid(id),

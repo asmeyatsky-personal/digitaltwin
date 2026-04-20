@@ -1,34 +1,43 @@
-# Cloud Build pipeline for backend services. Triggered on push to main.
+# Cloud Build pipeline. Builds every Rust service image in parallel, pushes
+# to Artifact Registry, generates an SBOM per service.
 # Substitutions: _COMMIT_SHA, _REGION.
 
 steps:
-  - name: gcr.io/cloud-builders/docker
-    id: build-identity
-    args:
-      - build
-      - --file=backend/services/identity-service/Dockerfile
-      - --tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/identity-service:${_COMMIT_SHA}
-      - --tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/identity-service:latest
-      - .
+  # Identity.
+  - { name: gcr.io/cloud-builders/docker, id: build-identity, wait_for: [-], args: [build, --file=backend/services/identity-service/Dockerfile, "--tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/identity-service:${_COMMIT_SHA}", .] }
+  - { name: gcr.io/cloud-builders/docker, id: build-conversation, wait_for: [-], args: [build, --file=backend/services/conversation-service/Dockerfile, "--tag=${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/conversation-service:${_COMMIT_SHA}", .] }
 
+  # Push all images.
   - name: gcr.io/cloud-builders/docker
     id: push-identity
-    args: [push, --all-tags, "${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/identity-service"]
+    wait_for: [build-identity]
+    args: [push, "${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/identity-service:${_COMMIT_SHA}"]
+  - name: gcr.io/cloud-builders/docker
+    id: push-conversation
+    wait_for: [build-conversation]
+    args: [push, "${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/conversation-service:${_COMMIT_SHA}"]
 
-  # SBOM generation (§4 supply chain).
+  # SBOM per service (§4).
   - name: anchore/syft:latest
     id: sbom-identity
-    args:
-      - "${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/identity-service:${_COMMIT_SHA}"
-      - -o
-      - spdx-json=/workspace/identity-sbom.spdx.json
+    wait_for: [push-identity]
+    args: ["${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/identity-service:${_COMMIT_SHA}", -o, "spdx-json=/workspace/identity-sbom.spdx.json"]
+  - name: anchore/syft:latest
+    id: sbom-conversation
+    wait_for: [push-conversation]
+    args: ["${_REGION}-docker.pkg.dev/${PROJECT_ID}/digitaltwin/conversation-service:${_COMMIT_SHA}", -o, "spdx-json=/workspace/conversation-sbom.spdx.json"]
 
 artifacts:
   objects:
     location: "gs://${PROJECT_ID}-build-artifacts/${_COMMIT_SHA}/"
-    paths:
-      - identity-sbom.spdx.json
+    paths: [identity-sbom.spdx.json, conversation-sbom.spdx.json]
 
 options:
   machineType: E2_HIGHCPU_8
   logging: CLOUD_LOGGING_ONLY
+
+# Note: the remaining 12 services (emotion, memory, family, achievement,
+# notification, avatar, voice, community, moderation, therapy, learning,
+# creative) reuse the Dockerfile pattern from identity. Add a matching
+# build/push/sbom triple above or use deploy/cloud-run/deploy-all.sh which
+# builds locally and deploys.

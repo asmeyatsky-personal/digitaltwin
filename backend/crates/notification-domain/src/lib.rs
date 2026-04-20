@@ -13,13 +13,19 @@ pub struct UserRef;
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum DomainError {
-    #[error("token cannot be empty")] EmptyToken,
-    #[error("unknown platform: {0}")] UnknownPlatform(String),
+    #[error("token cannot be empty")]
+    EmptyToken,
+    #[error("unknown platform: {0}")]
+    UnknownPlatform(String),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Platform { Ios, Android, Web }
+pub enum Platform {
+    Ios,
+    Android,
+    Web,
+}
 
 impl Platform {
     pub fn parse(raw: &str) -> Result<Self, DomainError> {
@@ -31,7 +37,11 @@ impl Platform {
         }
     }
     pub const fn as_str(self) -> &'static str {
-        match self { Self::Ios => "ios", Self::Android => "android", Self::Web => "web" }
+        match self {
+            Self::Ios => "ios",
+            Self::Android => "android",
+            Self::Web => "web",
+        }
     }
 }
 
@@ -43,9 +53,21 @@ pub struct DeviceToken {
     pub created_at: DateTime<Utc>,
 }
 impl DeviceToken {
-    pub fn new(user_id: EntityId<UserRef>, token: String, platform: Platform, created_at: DateTime<Utc>) -> Result<Self, DomainError> {
-        if token.trim().is_empty() { return Err(DomainError::EmptyToken); }
-        Ok(Self { user_id, token, platform, created_at })
+    pub fn new(
+        user_id: EntityId<UserRef>,
+        token: String,
+        platform: Platform,
+        created_at: DateTime<Utc>,
+    ) -> Result<Self, DomainError> {
+        if token.trim().is_empty() {
+            return Err(DomainError::EmptyToken);
+        }
+        Ok(Self {
+            user_id,
+            token,
+            platform,
+            created_at,
+        })
     }
 }
 
@@ -67,17 +89,32 @@ pub trait PushPort: Send + Sync {
     async fn send(&self, tokens: &[DeviceToken], payload: &Payload) -> Result<(), PushError>;
 }
 
-#[derive(Debug, Error)] pub enum StoreError { #[error("backend: {0}")] Backend(String) }
-#[derive(Debug, Error)] pub enum PushError { #[error("push: {0}")] Failed(String), #[error("timeout")] Timeout }
+#[derive(Debug, Error)]
+pub enum StoreError {
+    #[error("backend: {0}")]
+    Backend(String),
+}
+#[derive(Debug, Error)]
+pub enum PushError {
+    #[error("push: {0}")]
+    Failed(String),
+    #[error("timeout")]
+    Timeout,
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test] fn rejects_empty_token() {
-        assert_eq!(DeviceToken::new(EntityId::new(), "  ".into(), Platform::Ios, Utc::now()).unwrap_err(), DomainError::EmptyToken);
+    #[test]
+    fn rejects_empty_token() {
+        assert_eq!(
+            DeviceToken::new(EntityId::new(), "  ".into(), Platform::Ios, Utc::now()).unwrap_err(),
+            DomainError::EmptyToken
+        );
     }
-    #[test] fn platform_roundtrip() {
-        for p in ["ios","android","web"] {
+    #[test]
+    fn platform_roundtrip() {
+        for p in ["ios", "android", "web"] {
             assert_eq!(Platform::parse(p).unwrap().as_str(), p);
         }
     }

@@ -124,7 +124,10 @@ impl FuseCurrent {
         user_id: EntityId<UserRef>,
     ) -> Result<CurrentEmotion, CurrentEmotionError> {
         let now = self.clock.now();
-        let readings = self.repo.list_in_window(user_id, now - self.window, now).await?;
+        let readings = self
+            .repo
+            .list_in_window(user_id, now - self.window, now)
+            .await?;
         let fused = fuse(&readings)?;
         Ok(CurrentEmotion { fused })
     }
@@ -163,7 +166,10 @@ impl GetTimeline {
         &self,
         input: GetTimelineInput,
     ) -> Result<GetTimelineOutput, GetTimelineError> {
-        let readings = self.repo.list_in_window(input.user_id, input.from, input.to).await?;
+        let readings = self
+            .repo
+            .list_in_window(input.user_id, input.from, input.to)
+            .await?;
         Ok(GetTimelineOutput { readings })
     }
 }

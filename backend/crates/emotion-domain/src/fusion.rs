@@ -39,7 +39,9 @@ pub fn fuse(readings: &[EmotionReading]) -> Result<FusedEmotion, DomainError> {
         *s += r.modality().weight() * r.confidence();
 
         // Keep only the most-confident reading per modality for the projection.
-        let slot = per_modality.entry(r.modality()).or_insert((r.tone(), r.confidence()));
+        let slot = per_modality
+            .entry(r.modality())
+            .or_insert((r.tone(), r.confidence()));
         if r.confidence() > slot.1 {
             *slot = (r.tone(), r.confidence());
         }
@@ -130,6 +132,9 @@ mod tests {
             r(Modality::Face, UnifiedTone::Sad, 0.9),
         ])
         .expect("ok");
-        assert_eq!(out.per_modality.get(&Modality::Face), Some(&UnifiedTone::Sad));
+        assert_eq!(
+            out.per_modality.get(&Modality::Face),
+            Some(&UnifiedTone::Sad)
+        );
     }
 }

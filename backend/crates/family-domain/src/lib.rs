@@ -21,7 +21,11 @@ pub enum DomainError {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
-pub enum FamilyRole { Owner, Adult, Child }
+pub enum FamilyRole {
+    Owner,
+    Adult,
+    Child,
+}
 
 impl FamilyRole {
     pub fn parse(raw: &str) -> Result<Self, DomainError> {
@@ -33,7 +37,11 @@ impl FamilyRole {
         }
     }
     pub const fn as_str(self) -> &'static str {
-        match self { Self::Owner => "owner", Self::Adult => "adult", Self::Child => "child" }
+        match self {
+            Self::Owner => "owner",
+            Self::Adult => "adult",
+            Self::Child => "child",
+        }
     }
 }
 
@@ -45,9 +53,21 @@ pub struct Family {
     pub created_at: DateTime<Utc>,
 }
 impl Family {
-    pub fn new(id: EntityId<Family>, name: String, created_by: EntityId<UserRef>, created_at: DateTime<Utc>) -> Result<Self, DomainError> {
-        if name.trim().is_empty() { return Err(DomainError::EmptyName); }
-        Ok(Self { id, name, created_by, created_at })
+    pub fn new(
+        id: EntityId<Family>,
+        name: String,
+        created_by: EntityId<UserRef>,
+        created_at: DateTime<Utc>,
+    ) -> Result<Self, DomainError> {
+        if name.trim().is_empty() {
+            return Err(DomainError::EmptyName);
+        }
+        Ok(Self {
+            id,
+            name,
+            created_by,
+            created_at,
+        })
     }
 }
 
@@ -64,8 +84,14 @@ pub trait FamilyRepository: Send + Sync {
     async fn insert_family(&self, f: &Family) -> Result<(), StoreError>;
     async fn get_family(&self, id: EntityId<Family>) -> Result<Option<Family>, StoreError>;
     async fn add_member(&self, m: &FamilyMember) -> Result<(), StoreError>;
-    async fn list_members(&self, family_id: EntityId<Family>) -> Result<Vec<FamilyMember>, StoreError>;
-    async fn families_for_user(&self, user_id: EntityId<UserRef>) -> Result<Vec<Family>, StoreError>;
+    async fn list_members(
+        &self,
+        family_id: EntityId<Family>,
+    ) -> Result<Vec<FamilyMember>, StoreError>;
+    async fn families_for_user(
+        &self,
+        user_id: EntityId<UserRef>,
+    ) -> Result<Vec<Family>, StoreError>;
 }
 
 #[derive(Debug, Error)]
@@ -79,11 +105,14 @@ mod tests {
     use super::*;
     #[test]
     fn rejects_empty_name() {
-        assert_eq!(Family::new(EntityId::new(), "  ".into(), EntityId::new(), Utc::now()).unwrap_err(), DomainError::EmptyName);
+        assert_eq!(
+            Family::new(EntityId::new(), "  ".into(), EntityId::new(), Utc::now()).unwrap_err(),
+            DomainError::EmptyName
+        );
     }
     #[test]
     fn role_parse_roundtrip() {
-        for v in ["owner","adult","child"] {
+        for v in ["owner", "adult", "child"] {
             assert_eq!(FamilyRole::parse(v).unwrap().as_str(), v);
         }
     }

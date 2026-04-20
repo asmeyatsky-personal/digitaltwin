@@ -140,17 +140,29 @@ impl EmotionReading {
     }
 
     #[must_use]
-    pub fn id(&self) -> ReadingId { self.id }
+    pub fn id(&self) -> ReadingId {
+        self.id
+    }
     #[must_use]
-    pub fn user_id(&self) -> kernel::EntityId<UserRef> { self.user_id }
+    pub fn user_id(&self) -> kernel::EntityId<UserRef> {
+        self.user_id
+    }
     #[must_use]
-    pub fn modality(&self) -> Modality { self.modality }
+    pub fn modality(&self) -> Modality {
+        self.modality
+    }
     #[must_use]
-    pub fn tone(&self) -> UnifiedTone { self.tone }
+    pub fn tone(&self) -> UnifiedTone {
+        self.tone
+    }
     #[must_use]
-    pub fn confidence(&self) -> f32 { self.confidence }
+    pub fn confidence(&self) -> f32 {
+        self.confidence
+    }
     #[must_use]
-    pub fn recorded_at(&self) -> DateTime<Utc> { self.recorded_at }
+    pub fn recorded_at(&self) -> DateTime<Utc> {
+        self.recorded_at
+    }
 }
 
 #[cfg(test)]
@@ -189,21 +201,26 @@ mod tests {
     #[test]
     fn accepts_boundary_confidences() {
         for c in [0.0, 0.5, 1.0] {
-            assert!(EmotionReading::new(
-                ReadingId::new(),
-                EntityId::<UserRef>::new(),
-                Modality::Voice,
-                UnifiedTone::Calm,
-                c,
-                Utc::now()
-            )
-            .is_ok());
+            assert!(
+                EmotionReading::new(
+                    ReadingId::new(),
+                    EntityId::<UserRef>::new(),
+                    Modality::Voice,
+                    UnifiedTone::Calm,
+                    c,
+                    Utc::now()
+                )
+                .is_ok()
+            );
         }
     }
 
     #[test]
     fn parse_tone_maps_legacy_strings() {
-        assert_eq!(UnifiedTone::parse("Frustrated").unwrap(), UnifiedTone::Angry);
+        assert_eq!(
+            UnifiedTone::parse("Frustrated").unwrap(),
+            UnifiedTone::Angry
+        );
         assert_eq!(UnifiedTone::parse("fear").unwrap(), UnifiedTone::Anxious);
     }
 

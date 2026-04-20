@@ -31,8 +31,7 @@ fn ts(dt: chrono::DateTime<chrono::Utc>) -> Timestamp {
     }
 }
 fn from_ts(t: &Timestamp) -> chrono::DateTime<chrono::Utc> {
-    chrono::DateTime::from_timestamp(t.seconds, t.nanos.try_into().unwrap_or(0))
-        .unwrap_or_default()
+    chrono::DateTime::from_timestamp(t.seconds, t.nanos.try_into().unwrap_or(0)).unwrap_or_default()
 }
 fn tone_to_proto(t: UnifiedTone) -> i32 {
     match t {
@@ -144,7 +143,11 @@ impl EmotionService for EmotionGrpc {
         let user_id = EntityId::<UserRef>::from_str(&req.user_id)
             .map_err(|_| Status::invalid_argument("bad user_id"))?;
         let from = req.from.as_ref().map(from_ts).unwrap_or_default();
-        let to = req.to.as_ref().map(from_ts).unwrap_or_else(chrono::Utc::now);
+        let to = req
+            .to
+            .as_ref()
+            .map(from_ts)
+            .unwrap_or_else(chrono::Utc::now);
         let out = self
             .services
             .timeline

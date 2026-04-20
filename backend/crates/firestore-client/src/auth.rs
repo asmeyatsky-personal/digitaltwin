@@ -104,10 +104,10 @@ impl TokenSource {
     pub async fn access_token(&self) -> Result<String, FirestoreError> {
         {
             let guard = self.cache.lock().await;
-            if let Some(c) = guard.as_ref() {
-                if Instant::now() < c.expires_at {
-                    return Ok(c.token.clone());
-                }
+            if let Some(c) = guard.as_ref()
+                && Instant::now() < c.expires_at
+            {
+                return Ok(c.token.clone());
             }
         }
 
@@ -138,9 +138,15 @@ impl TokenSource {
             .await
             .map_err(|e| FirestoreError::Auth(e.to_string()))?;
         if !resp.status().is_success() {
-            return Err(FirestoreError::Auth(format!("metadata http {}", resp.status())));
+            return Err(FirestoreError::Auth(format!(
+                "metadata http {}",
+                resp.status()
+            )));
         }
-        let body: Body = resp.json().await.map_err(|e| FirestoreError::Auth(e.to_string()))?;
+        let body: Body = resp
+            .json()
+            .await
+            .map_err(|e| FirestoreError::Auth(e.to_string()))?;
         Ok((body.access_token, Duration::from_secs(body.expires_in)))
     }
 
@@ -160,8 +166,8 @@ impl TokenSource {
         let header = Header::new(Algorithm::RS256);
         let encoding_key = EncodingKey::from_rsa_pem(key.private_key.as_bytes())
             .map_err(|e| FirestoreError::Auth(format!("bad key: {e}")))?;
-        let assertion =
-            encode(&header, &claims, &encoding_key).map_err(|e| FirestoreError::Auth(e.to_string()))?;
+        let assertion = encode(&header, &claims, &encoding_key)
+            .map_err(|e| FirestoreError::Auth(e.to_string()))?;
 
         let resp = self
             .client
@@ -174,10 +180,15 @@ impl TokenSource {
             .await
             .map_err(|e| FirestoreError::Auth(e.to_string()))?;
         if !resp.status().is_success() {
-            return Err(FirestoreError::Auth(format!("oauth http {}", resp.status())));
+            return Err(FirestoreError::Auth(format!(
+                "oauth http {}",
+                resp.status()
+            )));
         }
-        let body: OAuthTokenResponse =
-            resp.json().await.map_err(|e| FirestoreError::Auth(e.to_string()))?;
+        let body: OAuthTokenResponse = resp
+            .json()
+            .await
+            .map_err(|e| FirestoreError::Auth(e.to_string()))?;
         Ok((body.access_token, Duration::from_secs(body.expires_in)))
     }
 }

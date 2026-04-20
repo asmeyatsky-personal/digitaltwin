@@ -1,7 +1,7 @@
 # Voice Service with ElevenLabs Integration
 # Multi-stage build for optimized image size
 
-FROM python:3.11-slim AS builder
+FROM python:3.12-slim AS builder
 
 RUN pip install --no-cache-dir --upgrade pip
 
@@ -12,7 +12,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"

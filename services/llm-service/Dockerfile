@@ -1,7 +1,7 @@
 # LLM Service with Multi-Provider LLM Support
 # Multi-stage build for optimized image size
 
-FROM python:3.11-slim AS builder
+FROM python:3.12-slim AS builder
 
 ARG INCLUDE_LOCAL_EMBEDDINGS=false
 
@@ -19,7 +19,7 @@ RUN if [ "$INCLUDE_LOCAL_EMBEDDINGS" = "true" ]; then \
     fi
 
 
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"

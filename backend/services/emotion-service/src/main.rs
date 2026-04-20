@@ -94,7 +94,9 @@ async fn main() -> Result<()> {
     };
 
     let mcp = Arc::new(EmotionMcp::new(services.clone()));
-    let mcp_router = Router::new().route("/mcp", post(handle_mcp)).with_state(mcp);
+    let mcp_router = Router::new()
+        .route("/mcp", post(handle_mcp))
+        .with_state(mcp);
     let rest_router = emotion_presentation::rest::router(services.clone());
     let http = Router::new()
         .route("/healthz", axum::routing::get(|| async { "ok" }))

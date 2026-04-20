@@ -4,35 +4,69 @@
 #![deny(clippy::all)]
 #![allow(clippy::missing_errors_doc)]
 
-use achievement_domain::{Achievement, AchievementRepository, StoreError, UserAchievement, UserRef};
+use achievement_domain::{
+    Achievement, AchievementRepository, StoreError, UserAchievement, UserRef,
+};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use kernel::EntityId;
 use sqlx::{PgPool, Row, postgres::PgRow};
 use uuid::Uuid;
 
-pub struct PostgresAchievementRepository { pool: PgPool }
+pub struct PostgresAchievementRepository {
+    pool: PgPool,
+}
 impl PostgresAchievementRepository {
-    pub fn new(pool: PgPool) -> Self { Self { pool } }
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
     fn row_to_achievement(r: PgRow) -> Result<Achievement, StoreError> {
-        let id: Uuid = r.try_get("id").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let key: String = r.try_get("key").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let title: String = r.try_get("title").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let description: String = r.try_get("description").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let category: String = r.try_get("category").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let required_count: i32 = r.try_get("required_count").map_err(|e| StoreError::Backend(e.to_string()))?;
-        Achievement::new(EntityId::from_uuid(id), key, title, description, category, required_count as u32)
-            .map_err(|e| StoreError::Backend(e.to_string()))
+        let id: Uuid = r
+            .try_get("id")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let key: String = r
+            .try_get("key")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let title: String = r
+            .try_get("title")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let description: String = r
+            .try_get("description")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let category: String = r
+            .try_get("category")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let required_count: i32 = r
+            .try_get("required_count")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        Achievement::new(
+            EntityId::from_uuid(id),
+            key,
+            title,
+            description,
+            category,
+            required_count as u32,
+        )
+        .map_err(|e| StoreError::Backend(e.to_string()))
     }
     fn row_to_user(r: PgRow) -> Result<UserAchievement, StoreError> {
-        let user_id: Uuid = r.try_get("user_id").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let achievement_id: Uuid = r.try_get("achievement_id").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let progress: i32 = r.try_get("progress").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let unlocked_at: Option<DateTime<Utc>> = r.try_get("unlocked_at").map_err(|e| StoreError::Backend(e.to_string()))?;
+        let user_id: Uuid = r
+            .try_get("user_id")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let achievement_id: Uuid = r
+            .try_get("achievement_id")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let progress: i32 = r
+            .try_get("progress")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let unlocked_at: Option<DateTime<Utc>> = r
+            .try_get("unlocked_at")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
         Ok(UserAchievement {
             user_id: EntityId::from_uuid(user_id),
             achievement_id: EntityId::from_uuid(achievement_id),
-            progress: progress as u32, unlocked_at,
+            progress: progress as u32,
+            unlocked_at,
         })
     }
 }
@@ -60,7 +94,11 @@ impl AchievementRepository for PostgresAchievementRepository {
             .fetch_all(&self.pool).await.map_err(|e| StoreError::Backend(e.to_string()))?;
         rows.into_iter().map(Self::row_to_achievement).collect()
     }
-    async fn get_user(&self, user_id: EntityId<UserRef>, achievement_id: EntityId<Achievement>) -> Result<Option<UserAchievement>, StoreError> {
+    async fn get_user(
+        &self,
+        user_id: EntityId<UserRef>,
+        achievement_id: EntityId<Achievement>,
+    ) -> Result<Option<UserAchievement>, StoreError> {
         let row = sqlx::query("SELECT user_id, achievement_id, progress, unlocked_at FROM achievement.user_achievements WHERE user_id = $1 AND achievement_id = $2")
             .bind(user_id.as_uuid()).bind(achievement_id.as_uuid())
             .fetch_optional(&self.pool).await.map_err(|e| StoreError::Backend(e.to_string()))?;
@@ -77,7 +115,10 @@ impl AchievementRepository for PostgresAchievementRepository {
         .execute(&self.pool).await.map_err(|e| StoreError::Backend(e.to_string()))?;
         Ok(())
     }
-    async fn list_for_user(&self, user_id: EntityId<UserRef>) -> Result<Vec<UserAchievement>, StoreError> {
+    async fn list_for_user(
+        &self,
+        user_id: EntityId<UserRef>,
+    ) -> Result<Vec<UserAchievement>, StoreError> {
         let rows = sqlx::query("SELECT user_id, achievement_id, progress, unlocked_at FROM achievement.user_achievements WHERE user_id = $1")
             .bind(user_id.as_uuid()).fetch_all(&self.pool).await.map_err(|e| StoreError::Backend(e.to_string()))?;
         rows.into_iter().map(Self::row_to_user).collect()

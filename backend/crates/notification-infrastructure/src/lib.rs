@@ -18,19 +18,33 @@ use sqlx::{PgPool, Row, postgres::PgRow};
 use std::time::Duration;
 use uuid::Uuid;
 
-pub struct PostgresTokenRepository { pool: PgPool }
+pub struct PostgresTokenRepository {
+    pool: PgPool,
+}
 impl PostgresTokenRepository {
-    pub fn new(pool: PgPool) -> Self { Self { pool } }
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
     fn row_to_token(r: PgRow) -> Result<DeviceToken, StoreError> {
-        let user_id: Uuid = r.try_get("user_id").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let token: String = r.try_get("token").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let platform: String = r.try_get("platform").map_err(|e| StoreError::Backend(e.to_string()))?;
-        let created_at: DateTime<Utc> = r.try_get("created_at").map_err(|e| StoreError::Backend(e.to_string()))?;
+        let user_id: Uuid = r
+            .try_get("user_id")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let token: String = r
+            .try_get("token")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let platform: String = r
+            .try_get("platform")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        let created_at: DateTime<Utc> = r
+            .try_get("created_at")
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
         DeviceToken::new(
-            EntityId::from_uuid(user_id), token,
+            EntityId::from_uuid(user_id),
+            token,
             Platform::parse(&platform).map_err(|e| StoreError::Backend(e.to_string()))?,
             created_at,
-        ).map_err(|e| StoreError::Backend(e.to_string()))
+        )
+        .map_err(|e| StoreError::Backend(e.to_string()))
     }
 }
 
@@ -47,7 +61,10 @@ impl TokenRepository for PostgresTokenRepository {
     }
     async fn unregister(&self, token: &str) -> Result<(), StoreError> {
         sqlx::query("DELETE FROM notification.tokens WHERE token = $1")
-            .bind(token).execute(&self.pool).await.map_err(|e| StoreError::Backend(e.to_string()))?;
+            .bind(token)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
         Ok(())
     }
     async fn for_user(&self, user_id: EntityId<UserRef>) -> Result<Vec<DeviceToken>, StoreError> {
@@ -65,14 +82,24 @@ pub struct ExpoPushAdapter {
 impl ExpoPushAdapter {
     pub fn new() -> Self {
         Self {
-            client: Client::builder().timeout(Duration::from_secs(10)).build().expect("reqwest"),
+            client: Client::builder()
+                .timeout(Duration::from_secs(10))
+                .build()
+                .expect("reqwest"),
             endpoint: "https://exp.host/--/api/v2/push/send".into(),
             timeout: Duration::from_secs(10),
         }
     }
-    pub fn with_endpoint(mut self, url: impl Into<String>) -> Self { self.endpoint = url.into(); self }
+    pub fn with_endpoint(mut self, url: impl Into<String>) -> Self {
+        self.endpoint = url.into();
+        self
+    }
 }
-impl Default for ExpoPushAdapter { fn default() -> Self { Self::new() } }
+impl Default for ExpoPushAdapter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 #[async_trait]
 impl PushPort for ExpoPushAdapter {
@@ -80,9 +107,13 @@ impl PushPort for ExpoPushAdapter {
         let messages: Vec<_> = tokens.iter().map(|t| json!({
             "to": t.token, "title": payload.title, "body": payload.body, "data": payload.data,
         })).collect();
-        let resp = tokio::time::timeout(self.timeout, self.client.post(&self.endpoint).json(&messages).send())
-            .await.map_err(|_| PushError::Timeout)?
-            .map_err(|e| PushError::Failed(e.to_string()))?;
+        let resp = tokio::time::timeout(
+            self.timeout,
+            self.client.post(&self.endpoint).json(&messages).send(),
+        )
+        .await
+        .map_err(|_| PushError::Timeout)?
+        .map_err(|e| PushError::Failed(e.to_string()))?;
         if !resp.status().is_success() {
             return Err(PushError::Failed(format!("http {}", resp.status())));
         }

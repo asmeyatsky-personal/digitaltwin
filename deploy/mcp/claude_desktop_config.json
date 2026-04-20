@@ -1,0 +1,83 @@
+{
+  "comment": [
+    "Claude Desktop MCP configuration for the Digital Twin services.",
+    "Each bounded context exposes an MCP server at <service>/mcp over HTTP",
+    "(§3.5: one MCP server per bounded context).",
+    "",
+    "Set <HOST> to the Cloud Run URL of each service (or localhost:<port>",
+    "during local dev). The HTTP POST /mcp endpoint speaks JSON-RPC 2.0 and",
+    "exposes tools (writes) and resources (reads)."
+  ],
+  "mcpServers": {
+    "digitaltwin-identity": {
+      "transport": "http",
+      "url": "https://identity-service-<HOST>/mcp",
+      "description": "User registration, authentication, token issuance."
+    },
+    "digitaltwin-conversation": {
+      "transport": "http",
+      "url": "https://conversation-service-<HOST>/mcp",
+      "description": "Emotional companion conversations. Tools: start, send, end."
+    },
+    "digitaltwin-emotion": {
+      "transport": "http",
+      "url": "https://emotion-service-<HOST>/mcp",
+      "description": "Multi-modal emotion readings + fusion."
+    },
+    "digitaltwin-memory": {
+      "transport": "http",
+      "url": "https://memory-service-<HOST>/mcp",
+      "description": "Personal memories + life events + conversation context."
+    },
+    "digitaltwin-avatar": {
+      "transport": "http",
+      "url": "https://avatar-service-<HOST>/mcp",
+      "description": "3D avatar generation from photos."
+    },
+    "digitaltwin-voice": {
+      "transport": "http",
+      "url": "https://voice-service-<HOST>/mcp",
+      "description": "Voice cloning + emotional TTS."
+    },
+    "digitaltwin-family": {
+      "transport": "http",
+      "url": "https://family-service-<HOST>/mcp",
+      "description": "Family/household membership."
+    },
+    "digitaltwin-achievement": {
+      "transport": "http",
+      "url": "https://achievement-service-<HOST>/mcp",
+      "description": "Achievements and progress tracking."
+    },
+    "digitaltwin-community": {
+      "transport": "http",
+      "url": "https://community-service-<HOST>/mcp",
+      "description": "Community groups and posts."
+    },
+    "digitaltwin-moderation": {
+      "transport": "http",
+      "url": "https://moderation-service-<HOST>/mcp",
+      "description": "Content reporting and moderator review."
+    },
+    "digitaltwin-therapy": {
+      "transport": "http",
+      "url": "https://therapy-service-<HOST>/mcp",
+      "description": "Therapist directory + PHQ-9/GAD-7 clinical screening."
+    },
+    "digitaltwin-learning": {
+      "transport": "http",
+      "url": "https://learning-service-<HOST>/mcp",
+      "description": "Learning paths (emotional literacy, mindfulness, etc)."
+    },
+    "digitaltwin-creative": {
+      "transport": "http",
+      "url": "https://creative-service-<HOST>/mcp",
+      "description": "User-created stories, poems, reflections."
+    },
+    "digitaltwin-notification": {
+      "transport": "http",
+      "url": "https://notification-service-<HOST>/mcp",
+      "description": "Push notification registration + delivery."
+    }
+  }
+}

@@ -19,7 +19,9 @@ pub struct FirestoreMemoryStore {
 }
 impl FirestoreMemoryStore {
     #[must_use]
-    pub fn new(client: FirestoreClient) -> Self { Self { client } }
+    pub fn new(client: FirestoreClient) -> Self {
+        Self { client }
+    }
 }
 
 #[async_trait]
@@ -38,7 +40,11 @@ impl MemoryStore for FirestoreMemoryStore {
             .map_err(|e| StoreError::Backend(e.to_string()))
     }
 
-    async fn list_for_user(&self, user_id: EntityId<UserRef>, limit: u32) -> Result<Vec<Memory>, StoreError> {
+    async fn list_for_user(
+        &self,
+        user_id: EntityId<UserRef>,
+        limit: u32,
+    ) -> Result<Vec<Memory>, StoreError> {
         let docs = self
             .client
             .list("memories", limit)
@@ -53,15 +59,33 @@ impl MemoryStore for FirestoreMemoryStore {
 
 fn doc_to_memory(d: &Document, user_id: EntityId<UserRef>) -> Result<Memory, StoreError> {
     let id = EntityId::from_str(&d.id).map_err(|e| StoreError::Backend(e.to_string()))?;
-    let uid_s = d.fields.get("user_id").and_then(Value::as_str).unwrap_or_default();
+    let uid_s = d
+        .fields
+        .get("user_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
     let parsed_user = EntityId::<UserRef>::from_str(uid_s).unwrap_or(user_id);
-    let content = d.fields.get("content").and_then(Value::as_str).unwrap_or("").to_string();
-    let mood = d.fields.get("mood").and_then(Value::as_str).unwrap_or("").to_string();
+    let content = d
+        .fields
+        .get("content")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let mood = d
+        .fields
+        .get("mood")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
     let tags: Vec<String> = d
         .fields
         .get("tags")
         .and_then(|v| v.as_array())
-        .map(|a| a.iter().filter_map(|t| t.as_str().map(str::to_owned)).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(|t| t.as_str().map(str::to_owned))
+                .collect()
+        })
         .unwrap_or_default();
     let created_at = d
         .fields
@@ -79,7 +103,9 @@ pub struct FirestoreLifeEventStore {
 }
 impl FirestoreLifeEventStore {
     #[must_use]
-    pub fn new(client: FirestoreClient) -> Self { Self { client } }
+    pub fn new(client: FirestoreClient) -> Self {
+        Self { client }
+    }
 }
 
 #[async_trait]
@@ -100,7 +126,12 @@ impl LifeEventStore for FirestoreLifeEventStore {
             .map_err(|err| StoreError::Backend(err.to_string()))
     }
 
-    async fn timeline(&self, user_id: EntityId<UserRef>, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<LifeEvent>, StoreError> {
+    async fn timeline(
+        &self,
+        user_id: EntityId<UserRef>,
+        from: DateTime<Utc>,
+        to: DateTime<Utc>,
+    ) -> Result<Vec<LifeEvent>, StoreError> {
         let docs = self
             .client
             .list("life_events", 200)
@@ -113,7 +144,11 @@ impl LifeEventStore for FirestoreLifeEventStore {
             .collect())
     }
 
-    async fn upcoming(&self, user_id: EntityId<UserRef>, horizon_days: u32) -> Result<Vec<LifeEvent>, StoreError> {
+    async fn upcoming(
+        &self,
+        user_id: EntityId<UserRef>,
+        horizon_days: u32,
+    ) -> Result<Vec<LifeEvent>, StoreError> {
         let now = Utc::now();
         let horizon = now + ChronoDuration::days(i64::from(horizon_days));
         self.timeline(user_id, now, horizon).await
@@ -122,10 +157,24 @@ impl LifeEventStore for FirestoreLifeEventStore {
 
 fn doc_to_event(d: &Document, user_id: EntityId<UserRef>) -> Result<LifeEvent, StoreError> {
     let id = EntityId::from_str(&d.id).map_err(|e| StoreError::Backend(e.to_string()))?;
-    let uid_s = d.fields.get("user_id").and_then(Value::as_str).unwrap_or_default();
+    let uid_s = d
+        .fields
+        .get("user_id")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
     let parsed_user = EntityId::<UserRef>::from_str(uid_s).unwrap_or(user_id);
-    let title = d.fields.get("title").and_then(Value::as_str).unwrap_or("").to_string();
-    let description = d.fields.get("description").and_then(Value::as_str).unwrap_or("").to_string();
+    let title = d
+        .fields
+        .get("title")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let description = d
+        .fields
+        .get("description")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
     let event_date = d
         .fields
         .get("event_date")
@@ -139,10 +188,27 @@ fn doc_to_event(d: &Document, user_id: EntityId<UserRef>) -> Result<LifeEvent, S
         .and_then(Value::as_str)
         .and_then(|c| LifeEventCategory::parse(c).ok())
         .unwrap_or(LifeEventCategory::Other);
-    let emotional_impact = d.fields.get("emotional_impact").and_then(Value::as_i64).unwrap_or(0) as i32;
-    let is_recurring = d.fields.get("is_recurring").and_then(Value::as_bool).unwrap_or(false);
-    LifeEvent::new(id, parsed_user, title, description, event_date, category, emotional_impact, is_recurring)
-        .map_err(|e| StoreError::Backend(e.to_string()))
+    let emotional_impact = d
+        .fields
+        .get("emotional_impact")
+        .and_then(Value::as_i64)
+        .unwrap_or(0) as i32;
+    let is_recurring = d
+        .fields
+        .get("is_recurring")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    LifeEvent::new(
+        id,
+        parsed_user,
+        title,
+        description,
+        event_date,
+        category,
+        emotional_impact,
+        is_recurring,
+    )
+    .map_err(|e| StoreError::Backend(e.to_string()))
 }
 
 // ---- In-memory adapters for tests ----
@@ -154,11 +220,21 @@ pub struct InMemoryMemoryStore {
 #[async_trait]
 impl MemoryStore for InMemoryMemoryStore {
     async fn save(&self, m: &Memory) -> Result<(), StoreError> {
-        self.inner.lock().map_err(|e| StoreError::Backend(e.to_string()))?.push(m.clone());
+        self.inner
+            .lock()
+            .map_err(|e| StoreError::Backend(e.to_string()))?
+            .push(m.clone());
         Ok(())
     }
-    async fn list_for_user(&self, user_id: EntityId<UserRef>, limit: u32) -> Result<Vec<Memory>, StoreError> {
-        let g = self.inner.lock().map_err(|e| StoreError::Backend(e.to_string()))?;
+    async fn list_for_user(
+        &self,
+        user_id: EntityId<UserRef>,
+        limit: u32,
+    ) -> Result<Vec<Memory>, StoreError> {
+        let g = self
+            .inner
+            .lock()
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
         let mut matches: Vec<Memory> = g.iter().filter(|m| m.user_id == user_id).cloned().collect();
         matches.sort_by_key(|m| std::cmp::Reverse(m.created_at));
         matches.truncate(limit as usize);
@@ -173,18 +249,38 @@ pub struct InMemoryLifeEventStore {
 #[async_trait]
 impl LifeEventStore for InMemoryLifeEventStore {
     async fn save(&self, e: &LifeEvent) -> Result<(), StoreError> {
-        self.inner.lock().map_err(|er| StoreError::Backend(er.to_string()))?.push(e.clone());
+        self.inner
+            .lock()
+            .map_err(|er| StoreError::Backend(er.to_string()))?
+            .push(e.clone());
         Ok(())
     }
-    async fn timeline(&self, user_id: EntityId<UserRef>, from: DateTime<Utc>, to: DateTime<Utc>) -> Result<Vec<LifeEvent>, StoreError> {
-        Ok(self.inner.lock().map_err(|e| StoreError::Backend(e.to_string()))?
+    async fn timeline(
+        &self,
+        user_id: EntityId<UserRef>,
+        from: DateTime<Utc>,
+        to: DateTime<Utc>,
+    ) -> Result<Vec<LifeEvent>, StoreError> {
+        Ok(self
+            .inner
+            .lock()
+            .map_err(|e| StoreError::Backend(e.to_string()))?
             .iter()
             .filter(|e| e.user_id == user_id && e.event_date >= from && e.event_date <= to)
             .cloned()
             .collect())
     }
-    async fn upcoming(&self, user_id: EntityId<UserRef>, horizon_days: u32) -> Result<Vec<LifeEvent>, StoreError> {
+    async fn upcoming(
+        &self,
+        user_id: EntityId<UserRef>,
+        horizon_days: u32,
+    ) -> Result<Vec<LifeEvent>, StoreError> {
         let now = Utc::now();
-        self.timeline(user_id, now, now + ChronoDuration::days(i64::from(horizon_days))).await
+        self.timeline(
+            user_id,
+            now,
+            now + ChronoDuration::days(i64::from(horizon_days)),
+        )
+        .await
     }
 }

@@ -13,7 +13,9 @@ use axum::{Json, Router, extract::State, routing::post};
 use figment::{Figment, providers::Env};
 use firestore_client::{FirestoreClient, ServiceAccountKey, TokenSource};
 use kernel::clock::SystemClock;
-use memory_application::{AddLifeEvent, GetConversationContext, GetTimeline, GetUpcoming, RecordMemory};
+use memory_application::{
+    AddLifeEvent, GetConversationContext, GetTimeline, GetUpcoming, RecordMemory,
+};
 use memory_infrastructure::{FirestoreLifeEventStore, FirestoreMemoryStore};
 use memory_presentation::{
     MemoryServices,
@@ -34,7 +36,9 @@ struct Config {
     #[serde(default = "default_log_level")]
     log_level: String,
 }
-fn default_log_level() -> String { "info".into() }
+fn default_log_level() -> String {
+    "info".into()
+}
 
 fn load_config() -> Result<Config> {
     Figment::new()
@@ -44,7 +48,9 @@ fn load_config() -> Result<Config> {
         .context("config (required: MEMORY_DATABASE_URL, MEMORY_GCP_PROJECT_ID, PORT)")
 }
 
-struct PostgresAuditLedger { pool: PgPool }
+struct PostgresAuditLedger {
+    pool: PgPool,
+}
 #[async_trait]
 impl AuditPort for PostgresAuditLedger {
     async fn append(&self, e: AuditEvent) -> Result<(), AuditError> {
@@ -72,7 +78,9 @@ async fn main() -> Result<()> {
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(5))
-        .connect(&cfg.database_url).await.context("postgres connect")?;
+        .connect(&cfg.database_url)
+        .await
+        .context("postgres connect")?;
 
     // Firestore auth: service-account JSON locally, metadata server on Cloud Run.
     let tokens = match cfg.google_application_credentials_json.as_ref() {
@@ -90,11 +98,19 @@ async fn main() -> Result<()> {
     let clock = Arc::new(SystemClock);
 
     let services = MemoryServices {
-        record: Arc::new(RecordMemory::new(memory_store.clone(), audit.clone(), clock.clone())),
+        record: Arc::new(RecordMemory::new(
+            memory_store.clone(),
+            audit.clone(),
+            clock.clone(),
+        )),
         timeline: Arc::new(GetTimeline::new(memory_store.clone())),
         add_event: Arc::new(AddLifeEvent::new(event_store.clone(), audit, clock.clone())),
         upcoming: Arc::new(GetUpcoming::new(event_store.clone())),
-        context: Arc::new(GetConversationContext::new(memory_store, event_store, clock)),
+        context: Arc::new(GetConversationContext::new(
+            memory_store,
+            event_store,
+            clock,
+        )),
     };
 
     let mcp = Arc::new(MemoryMcp::new(services.clone()));
@@ -111,6 +127,9 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn handle_mcp(State(mcp): State<Arc<MemoryMcp>>, Json(req): Json<JsonRpcRequest>) -> Json<JsonRpcResponse> {
+async fn handle_mcp(
+    State(mcp): State<Arc<MemoryMcp>>,
+    Json(req): Json<JsonRpcRequest>,
+) -> Json<JsonRpcResponse> {
     Json(mcp.handle(req).await)
 }

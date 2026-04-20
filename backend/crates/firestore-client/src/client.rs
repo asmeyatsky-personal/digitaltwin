@@ -76,7 +76,10 @@ impl FirestoreClient {
             .map_err(|e| FirestoreError::Http(e.to_string()))?;
         match resp.status().as_u16() {
             200 => {
-                let body: FirestoreRawDoc = resp.json().await.map_err(|e| FirestoreError::Decode(e.to_string()))?;
+                let body: FirestoreRawDoc = resp
+                    .json()
+                    .await
+                    .map_err(|e| FirestoreError::Decode(e.to_string()))?;
                 Ok(Some(body.into_document(doc_id.into())))
             }
             404 => Ok(None),
@@ -111,7 +114,11 @@ impl FirestoreClient {
                 let (k, v) = self.auth_header().await?;
                 let resp = tokio::time::timeout(
                     self.timeout,
-                    self.http.patch(&patch_url).header(k, v).json(&payload).send(),
+                    self.http
+                        .patch(&patch_url)
+                        .header(k, v)
+                        .json(&payload)
+                        .send(),
                 )
                 .await
                 .map_err(|_| FirestoreError::Timeout)?
@@ -166,7 +173,10 @@ impl FirestoreClient {
                 body: resp.text().await.unwrap_or_default(),
             });
         }
-        let body: ListResponse = resp.json().await.map_err(|e| FirestoreError::Decode(e.to_string()))?;
+        let body: ListResponse = resp
+            .json()
+            .await
+            .map_err(|e| FirestoreError::Decode(e.to_string()))?;
         Ok(body
             .documents
             .unwrap_or_default()
@@ -231,7 +241,9 @@ fn to_firestore_value(v: &Value) -> Value {
     match v {
         Value::Null => json!({ "nullValue": null }),
         Value::Bool(b) => json!({ "booleanValue": b }),
-        Value::Number(n) if n.is_i64() => json!({ "integerValue": n.as_i64().unwrap_or(0).to_string() }),
+        Value::Number(n) if n.is_i64() => {
+            json!({ "integerValue": n.as_i64().unwrap_or(0).to_string() })
+        }
         Value::Number(n) => json!({ "doubleValue": n.as_f64().unwrap_or(0.0) }),
         Value::String(s) => json!({ "stringValue": s }),
         Value::Array(a) => json!({
@@ -261,7 +273,11 @@ fn from_firestore_value(v: &Value) -> Value {
     } else if let Some(b) = tag.get("booleanValue") {
         b.clone()
     } else if let Some(i) = tag.get("integerValue").and_then(Value::as_str) {
-        Value::Number(i.parse::<i64>().map(Into::into).unwrap_or_else(|_| 0.into()))
+        Value::Number(
+            i.parse::<i64>()
+                .map(Into::into)
+                .unwrap_or_else(|_| 0.into()),
+        )
     } else if let Some(d) = tag.get("doubleValue") {
         d.clone()
     } else if tag.contains_key("nullValue") {

@@ -12,7 +12,9 @@ use figment::{Figment, providers::Env};
 use kernel::clock::SystemClock;
 use serde::Deserialize;
 use sqlx::{PgPool, postgres::PgPoolOptions};
-use therapy_application::{ListScreeningsForUser, ListTherapists, RegisterTherapist, SubmitScreening};
+use therapy_application::{
+    ListScreeningsForUser, ListTherapists, RegisterTherapist, SubmitScreening,
+};
 use therapy_infrastructure::PostgresTherapyRepository;
 use therapy_presentation::{
     TherapyServices,
@@ -23,12 +25,18 @@ use therapy_presentation::{
 struct Config {
     port: u16,
     database_url: String,
-    #[serde(default)] otel_exporter_otlp_endpoint: Option<String>,
-    #[serde(default = "default_log_level")] log_level: String,
+    #[serde(default)]
+    otel_exporter_otlp_endpoint: Option<String>,
+    #[serde(default = "default_log_level")]
+    log_level: String,
 }
-fn default_log_level() -> String { "info".into() }
+fn default_log_level() -> String {
+    "info".into()
+}
 
-struct PostgresAuditLedger { pool: PgPool }
+struct PostgresAuditLedger {
+    pool: PgPool,
+}
 #[async_trait]
 impl AuditPort for PostgresAuditLedger {
     async fn append(&self, e: AuditEvent) -> Result<(), AuditError> {
@@ -42,19 +50,30 @@ impl AuditPort for PostgresAuditLedger {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let cfg: Config = Figment::new().merge(Env::prefixed("THERAPY_")).merge(Env::raw().only(&["PORT"])).extract().context("config")?;
+    let cfg: Config = Figment::new()
+        .merge(Env::prefixed("THERAPY_"))
+        .merge(Env::raw().only(&["PORT"]))
+        .extract()
+        .context("config")?;
     let _g = telemetry::init(telemetry::Config {
         service_name: "therapy-service".into(),
         otlp_endpoint: cfg.otel_exporter_otlp_endpoint.clone(),
         log_level: cfg.log_level.clone(),
     })?;
-    let pool = PgPoolOptions::new().max_connections(10).acquire_timeout(Duration::from_secs(5))
-        .connect(&cfg.database_url).await?;
+    let pool = PgPoolOptions::new()
+        .max_connections(10)
+        .acquire_timeout(Duration::from_secs(5))
+        .connect(&cfg.database_url)
+        .await?;
     let repo = Arc::new(PostgresTherapyRepository::new(pool.clone()));
     let audit = Arc::new(PostgresAuditLedger { pool });
     let clock = Arc::new(SystemClock);
     let services = TherapyServices {
-        register: Arc::new(RegisterTherapist::new(repo.clone(), audit.clone(), clock.clone())),
+        register: Arc::new(RegisterTherapist::new(
+            repo.clone(),
+            audit.clone(),
+            clock.clone(),
+        )),
         list_t: Arc::new(ListTherapists::new(repo.clone())),
         submit: Arc::new(SubmitScreening::new(repo.clone(), audit, clock)),
         list_s: Arc::new(ListScreeningsForUser::new(repo)),
@@ -62,14 +81,18 @@ async fn main() -> Result<()> {
     let mcp = Arc::new(TherapyMcp::new(services.clone()));
     let http = Router::new()
         .route("/healthz", axum::routing::get(|| async { "ok" }))
-        .route("/mcp", post(handle_mcp)).with_state(mcp)
+        .route("/mcp", post(handle_mcp))
+        .with_state(mcp)
         .merge(therapy_presentation::router(services))
         .layer(tower_http::cors::CorsLayer::permissive());
-    let addr = std::net::SocketAddr::from(([0,0,0,0], cfg.port));
+    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], cfg.port));
     tracing::info!(%addr, "therapy-service listening");
     axum::serve(tokio::net::TcpListener::bind(addr).await?, http).await?;
     Ok(())
 }
-async fn handle_mcp(State(mcp): State<Arc<TherapyMcp>>, Json(req): Json<JsonRpcRequest>) -> Json<JsonRpcResponse> {
+async fn handle_mcp(
+    State(mcp): State<Arc<TherapyMcp>>,
+    Json(req): Json<JsonRpcRequest>,
+) -> Json<JsonRpcResponse> {
     Json(mcp.handle(req).await)
 }
