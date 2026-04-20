@@ -94,10 +94,18 @@ dependencies = [
  "achievement-infrastructure",
  "achievement-presentation",
  "anyhow",
+ "async-trait",
  "audit",
+ "axum 0.8.9",
+ "figment",
+ "http",
  "kernel",
+ "serde",
+ "sqlx",
  "telemetry",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
 ]
 
@@ -1401,15 +1409,23 @@ name = "family-service"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "audit",
+ "axum 0.8.9",
  "family-application",
  "family-contracts",
  "family-domain",
  "family-infrastructure",
  "family-presentation",
+ "figment",
+ "http",
  "kernel",
+ "serde",
+ "sqlx",
  "telemetry",
  "tokio",
+ "tower 0.5.3",
+ "tower-http 0.6.8",
  "tracing",
 ]
 

@@ -2,15 +2,28 @@ syntax = "proto3";
 
 package digitaltwin.family.v1;
 
-// Skeleton contract for the family bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service FamilyService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc CreateFamily(CreateFamilyRequest) returns (CreateFamilyResponse);
+  rpc AddMember(AddMemberRequest) returns (AddMemberResponse);
+  rpc GetFamily(GetFamilyRequest) returns (GetFamilyResponse);
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+  rpc ListForUser(ListForUserRequest) returns (ListForUserResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
-}
+message CreateFamilyRequest { string name = 1; string created_by_user_id = 2; }
+message CreateFamilyResponse { string family_id = 1; }
+
+message AddMemberRequest { string family_id = 1; string user_id = 2; string role = 3; }
+message AddMemberResponse {}
+
+message GetFamilyRequest { string family_id = 1; }
+message GetFamilyResponse { string id = 1; string name = 2; string created_by = 3; google.protobuf.Timestamp created_at = 4; }
+
+message ListMembersRequest { string family_id = 1; }
+message ListMembersResponse { repeated Member members = 1; }
+message Member { string user_id = 1; string role = 2; google.protobuf.Timestamp joined_at = 3; }
+
+message ListForUserRequest { string user_id = 1; }
+message ListForUserResponse { repeated GetFamilyResponse families = 1; }

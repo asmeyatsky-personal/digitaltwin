@@ -2,15 +2,37 @@ syntax = "proto3";
 
 package digitaltwin.achievement.v1;
 
-// Skeleton contract for the achievement bounded context. Concrete RPCs land
-// during the legacy .NET port; this file exists so the context's Rust
-// contracts crate has something to compile.
+import "google/protobuf/timestamp.proto";
 
 service AchievementService {
-  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc RecordProgress(RecordProgressRequest) returns (RecordProgressResponse);
+  rpc ListAchievements(ListAchievementsRequest) returns (ListAchievementsResponse);
+  rpc ListForUser(ListForUserRequest) returns (ListForUserResponse);
 }
 
-message HealthRequest {}
-message HealthResponse {
-  string status = 1;
+message RecordProgressRequest {
+  string user_id = 1;
+  string achievement_key = 2;
+  uint32 delta = 3;
+}
+message RecordProgressResponse { uint32 progress = 1; bool unlocked = 2; }
+
+message ListAchievementsRequest {}
+message ListAchievementsResponse { repeated Achievement achievements = 1; }
+
+message ListForUserRequest { string user_id = 1; }
+message ListForUserResponse { repeated UserAchievement achievements = 1; }
+
+message Achievement {
+  string id = 1;
+  string key = 2;
+  string title = 3;
+  string description = 4;
+  string category = 5;
+  uint32 required_count = 6;
+}
+message UserAchievement {
+  string achievement_id = 1;
+  uint32 progress = 2;
+  google.protobuf.Timestamp unlocked_at = 3;
 }

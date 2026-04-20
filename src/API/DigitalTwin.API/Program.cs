@@ -310,8 +310,8 @@ namespace DigitalTwin.API
             builder.Services.AddScoped<ICoachingService, CoachingService>();
             builder.Services.AddScoped<ISharedExperienceService, SharedExperienceService>();
             // PersonalHistory moved to the Rust memory-service (ADR-0001).
-            builder.Services.AddScoped<IFamilyService, FamilyService>();
-            builder.Services.AddScoped<IAchievementService, AchievementService>();
+            // Family moved to the Rust family-service (ADR-0001).
+            // Achievement moved to the Rust achievement-service (ADR-0001).
             builder.Services.AddScoped<ICommunityService, CommunityService>();
             builder.Services.AddScoped<IModerationService, ModerationService>();
             builder.Services.AddScoped<ICreativeService, CreativeService>();
